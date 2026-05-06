@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { generateFibonacciTabulation } from '../algorithms/fibonacci/fibonacci.tabulation';
-import { generateFibonacciMemoization } from '../algorithms/fibonacci/fibonacci.memoization';
-import { generateKnapsackTabulation } from '../algorithms/knapsack/knapsack.tabulation';
-import { generateKnapsackMemoization } from '../algorithms/knapsack/knapsack.memoization';
-import { LCSTabulation } from '../algorithms/lcs/lcs.tabulation';
-import { LCSMemoization } from '../algorithms/lcs/lcs.memoization';
-import { usePlayback } from '../hooks/usePlayback';
-import type { Step } from '../types/step.types';
-
-const lcsTabulation = new LCSTabulation();
-const lcsMemoization = new LCSMemoization();
+import { uiRegistry } from '../algorithms/config';
 
 // Layout Components
 import { Header } from '../components/layout/Header';
@@ -22,94 +12,13 @@ import { VisualPanel } from '../components/panels/VisualPanel';
 import { CodePanel } from '../components/panels/CodePanel';
 import { ComparisonPanel } from '../components/panels/ComparisonPanel';
 
-const FIBONACCI_TABULATION_CODE = [
-  "function fib(n) {",
-  "  if (n <= 1) return n;",
-  "  let dp = new Array(n + 1).fill(0);",
-  "  dp[1] = 1;",
-  "  for (let i = 2; i <= n; i++) {",
-  "    dp[i] = dp[i - 1] + dp[i - 2];",
-  "  }",
-  "  return dp[n];",
-  "}"
-];
-
-const FIBONACCI_MEMOIZATION_CODE = [
-  "function fib(n, memo = {}) {",
-  "  if (n in memo) return memo[n];",
-  "  if (n <= 1) return n;",
-  "  memo[n] = fib(n - 1, memo) + fib(n - 2, memo);",
-  "  return memo[n];",
-  "}"
-];
-
-const KNAPSACK_TABULATION_CODE = [
-  "function knapsack(capacity, items) {",
-  "  const n = items.length;",
-  "  const dp = Array(n + 1).fill().map(() => Array(capacity + 1).fill(0));",
-  "  for (let i = 1; i <= n; i++) {",
-  "    for (let w = 1; w <= capacity; w++) {",
-  "      if (items[i-1].weight <= w) {",
-  "        dp[i][w] = Math.max(dp[i-1][w], items[i-1].value + dp[i-1][w-items[i-1].weight]);",
-  "      } else {",
-  "        dp[i][w] = dp[i-1][w];",
-  "      }",
-  "    }",
-  "  }",
-  "  return dp[n][capacity];",
-  "}"
-];
-
-const KNAPSACK_MEMOIZATION_CODE = [
-  "function knapsack(i, w) {",
-  "  if (memo[i][w]) return memo[i][w];",
-  "  if (i === 0 || w === 0) return 0;",
-  "  let result;",
-  "  if (items[i-1].weight <= w) {",
-  "    result = Math.max(knapsack(i-1, w), items[i-1].value + knapsack(i-1, w-items[i-1].weight));",
-  "  } else {",
-  "    result = knapsack(i-1, w);",
-  "  }",
-  "  memo[i][w] = result;",
-  "  return result;",
-  "}"
-];
-
-const LCS_TABULATION_CODE = [
-  "function lcs(s1, s2) {",
-  "  const dp = Array(s1.length + 1).fill().map(() => Array(s2.length + 1).fill(0));",
-  "  for (let i = 1; i <= s1.length; i++) {",
-  "    for (let j = 1; j <= s2.length; j++) {",
-  "      if (s1[i-1] === s2[j-1]) {",
-  "        dp[i][j] = 1 + dp[i-1][j-1];",
-  "      } else {",
-  "        dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);",
-  "      }",
-  "    }",
-  "  }",
-  "  return dp[s1.length][s2.length];",
-  "}"
-];
-
-const LCS_MEMOIZATION_CODE = [
-  "function lcs(i, j) {",
-  "  if (i === 0 || j === 0) return 0;",
-  "  if (memo[i][j]) return memo[i][j];",
-  "  if (s1[i-1] === s2[j-1]) {",
-  "    memo[i][j] = 1 + lcs(i-1, j-1);",
-  "  } else {",
-  "    memo[i][j] = Math.max(lcs(i-1, j), lcs(i, j-1));",
-  "  }",
-  "  return memo[i][j];",
-  "}"
-];
+import { usePlayback } from '../hooks/usePlayback';
+import type { Step } from '../types/step.types';
 
 type Mode = 'single' | 'comparison';
 type AlgorithmSelection = 'fibonacci' | 'knapsack' | 'lcs';
 
 export const VisualizerPage: React.FC = () => {
-  const [tabulationSteps, setTabulationSteps] = useState<Step[]>([]);
-  const [memoizationSteps, setMemoizationSteps] = useState<Step[]>([]);
   const [mode, setMode] = useState<Mode>('single');
   const [learningMode, setLearningMode] = useState(false);
   const [algo, setAlgo] = useState<AlgorithmSelection>('fibonacci');
@@ -124,15 +33,22 @@ export const VisualizerPage: React.FC = () => {
     { weight: 4, value: 5, label: 'C' },
   ]);
 
-    if (algo === 'fibonacci') {
-      setTabulationSteps(generateFibonacciTabulation({ n: fibN }));
-      setMemoizationSteps(generateFibonacciMemoization({ n: fibN }));
-    } else if (algo === 'knapsack') {
-      setTabulationSteps(generateKnapsackTabulation({ capacity: knapCapacity, items: knapItems }));
-      setMemoizationSteps(generateKnapsackMemoization({ capacity: knapCapacity, items: knapItems }));
-    } else {
-      setTabulationSteps(lcsTabulation.generateSteps({ s1: lcsS1, s2: lcsS2 }));
-      setMemoizationSteps(lcsMemoization.generateSteps({ s1: lcsS1, s2: lcsS2 }));
+  const { tabulationSteps, memoizationSteps } = React.useMemo(() => {
+    if (!uiRegistry || !uiRegistry[algo]) return { tabulationSteps: [], memoizationSteps: [] };
+    try {
+      let inputConfig;
+      if (algo === 'fibonacci') inputConfig = { n: fibN };
+      else if (algo === 'knapsack') inputConfig = { capacity: knapCapacity, items: knapItems };
+      else inputConfig = { s1: lcsS1, s2: lcsS2 };
+
+      const result = uiRegistry[algo].generateSteps(inputConfig);
+      return { 
+        tabulationSteps: result?.tabulation || [], 
+        memoizationSteps: result?.memoization || [] 
+      };
+    } catch (e) {
+      console.error("Failed to generate steps:", e);
+      return { tabulationSteps: [], memoizationSteps: [] };
     }
   }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2]);
 
@@ -152,6 +68,11 @@ export const VisualizerPage: React.FC = () => {
     handlePrev,
   } = usePlayback(totalSteps);
 
+  useEffect(() => {
+    setCurrentStepIndex(0);
+    pause();
+  }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, setCurrentStepIndex, pause]);
+
   const toggleMode = () => {
     pause();
     setCurrentStepIndex(0);
@@ -159,6 +80,7 @@ export const VisualizerPage: React.FC = () => {
   };
 
   const renderExplanation = (step: Step) => {
+    if (!step || !step.explanation || !step.explanation.variables) return null;
     const { operationType, variables } = step.explanation;
     
     if (step.algorithm === 'knapsack') {
@@ -294,8 +216,8 @@ export const VisualizerPage: React.FC = () => {
             }
             rightPanel={
               <CodePanel 
-                code={algo === 'fibonacci' ? FIBONACCI_TABULATION_CODE : algo === 'knapsack' ? KNAPSACK_TABULATION_CODE : LCS_TABULATION_CODE} 
-                activeLine={currentTabStep.codeReference.lineNumber} 
+                code={uiRegistry[algo]?.code?.tabulation || []} 
+                activeLine={currentTabStep.codeReference?.lineNumber || 1} 
               />
             }
           />
@@ -304,8 +226,8 @@ export const VisualizerPage: React.FC = () => {
             <ComparisonPanel 
               leftStep={memoizationSteps[Math.min(currentStepIndex, Math.max(0, memoizationSteps.length - 1))]!}
               rightStep={tabulationSteps[Math.min(currentStepIndex, Math.max(0, tabulationSteps.length - 1))]!}
-              leftCode={algo === 'fibonacci' ? FIBONACCI_MEMOIZATION_CODE : algo === 'knapsack' ? KNAPSACK_MEMOIZATION_CODE : LCS_MEMOIZATION_CODE}
-              rightCode={algo === 'fibonacci' ? FIBONACCI_TABULATION_CODE : algo === 'knapsack' ? KNAPSACK_TABULATION_CODE : LCS_TABULATION_CODE}
+              leftCode={uiRegistry[algo]?.code?.memoization || []}
+              rightCode={uiRegistry[algo]?.code?.tabulation || []}
               learningMode={learningMode}
               algo={algo}
               renderExplanation={renderExplanation}

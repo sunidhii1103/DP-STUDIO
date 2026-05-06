@@ -47,6 +47,7 @@ export class LCSTabulation implements AlgorithmModule {
 
     const addStep = (operation: Step['operation'], active: {i: number, j: number}, deps: {i: number, j: number}[], vars: Record<string, any>, line: number) => {
       metrics.totalOperationsSoFar++;
+      metrics.operationsCount++;
       steps.push({
         id: uuidv4(),
         index: stepIndex++,
