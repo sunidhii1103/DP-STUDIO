@@ -120,7 +120,16 @@ export const VisualizerPage: React.FC = () => {
         return <p style={{ fontSize: '1.1rem', margin: 0 }}>Initialize Base Case: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>dp[{variables.i}][{variables.j}] = 0</code></p>;
       }
       if (operationType === 'compare') {
-        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Compare characters: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>'{variables.char1}' == '{variables.char2}'</code></p>;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <p style={{ fontSize: '1.1rem', margin: 0 }}>Compare characters: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>'{variables.char1}' == '{variables.char2}'</code></p>
+            {variables.partialLCS !== undefined && (
+               <p style={{ fontSize: '1.1rem', margin: 0, fontWeight: 'bold', color: 'var(--color-success)' }}>
+                 Current LCS: <code style={{ padding: '2px 6px', backgroundColor: 'var(--color-bg-tertiary)', borderRadius: '4px' }}>{variables.partialLCS || '""'}</code>
+               </p>
+            )}
+          </div>
+        );
       }
       if (operationType === 'match') {
         return <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-success)' }}>Characters Match! <br/><span style={{fontSize: '0.9rem'}}>Extend LCS by 1.</span></p>;
@@ -129,10 +138,39 @@ export const VisualizerPage: React.FC = () => {
         return <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-warning)' }}>Mismatch.<br/><span style={{fontSize: '0.9rem', color: 'var(--color-text-secondary)'}}>Evaluating max of top ({variables.valTop}) and left ({variables.valLeft}).</span></p>;
       }
       if (operationType?.startsWith('backtrack')) {
-        return <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-info)' }}>Backtracking: <strong>{operationType.replace('backtrack_', '').replace('_', ' ').toUpperCase()}</strong></p>;
+        let text = "";
+        if (operationType === 'backtrack_match') {
+          text = `Characters match ('${variables.char1}'), so we include it and move diagonally ↖`;
+        } else if (operationType === 'backtrack_move_top') {
+          text = `Mismatch. We follow the larger neighboring state to preserve optimal subsequence length. Moving top ↑ (${variables.valTop} >= ${variables.valLeft})`;
+        } else if (operationType === 'backtrack_move_left') {
+          text = `Mismatch. We follow the larger neighboring state to preserve optimal subsequence length. Moving left ← (${variables.valTop} < ${variables.valLeft})`;
+        }
+        
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+             <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-info)' }}>
+               <strong>Backtracking Phase:</strong> {text}
+             </p>
+             {variables.partialLCS !== undefined && (
+               <p style={{ fontSize: '1.1rem', margin: 0, fontWeight: 'bold', color: 'var(--color-success)' }}>
+                 Current LCS: <code style={{ padding: '2px 6px', backgroundColor: 'var(--color-bg-tertiary)', borderRadius: '4px' }}>{variables.partialLCS || '""'}</code>
+               </p>
+             )}
+          </div>
+        );
       }
       if (operationType === 'result') {
-        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Algorithm complete! LCS Length is: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px', color: 'var(--color-success)' }}>{variables.result}</code></p>;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <p style={{ fontSize: '1.1rem', margin: 0 }}>Algorithm complete! LCS Length is: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px', color: 'var(--color-success)' }}>{variables.result}</code></p>
+            {variables.partialLCS !== undefined && (
+               <p style={{ fontSize: '1.2rem', margin: 0, fontWeight: 'bold', color: 'var(--color-success)' }}>
+                 Final LCS String: <code style={{ padding: '2px 6px', backgroundColor: 'var(--color-bg-tertiary)', borderRadius: '4px' }}>{variables.partialLCS || '""'}</code>
+               </p>
+            )}
+          </div>
+        );
       }
       if (operationType === 'cache_hit') {
         return <p style={{ fontSize: '1.1rem', margin: 0 }}>Cache Hit: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 4px', borderRadius: '4px', color: 'var(--color-info)' }}>memo[{variables.i}][{variables.j}] = {variables.cachedValue}</code></p>;

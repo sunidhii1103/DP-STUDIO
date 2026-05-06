@@ -129,40 +129,48 @@ export class LCSMemoization implements AlgorithmModule {
 
     let i = n;
     let j = m;
+    let partialLCS = "";
+    
     while (i > 0 && j > 0) {
       table[i][j].state = 'active';
-      addStep('compare', {i, j}, [], {i, j, char1: s1[i-1], char2: s2[j-1]}, 24);
+      addStep('compare', {i, j}, [], {i, j, char1: s1[i-1], char2: s2[j-1], partialLCS}, 24);
 
       if (s1[i-1] === s2[j-1]) {
         table[i][j].state = 'match';
-        addStep('backtrack_match', {i, j}, [{i: i-1, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1]}, 25);
+        table[i][j].value = `${table[i][j].value} ↖`;
+        partialLCS = s1[i-1] + partialLCS;
+        addStep('backtrack_match', {i, j}, [{i: i-1, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], partialLCS}, 25);
         i--;
         j--;
       } else {
         table[i-1][j].state = 'dependency';
         table[i][j-1].state = 'dependency';
-        const valTop = table[i-1][j].value as number ?? 0;
-        const valLeft = table[i][j-1].value as number ?? 0;
+        const rawTop = table[i-1][j].value ?? 0;
+        const rawLeft = table[i][j-1].value ?? 0;
+        const valTop = typeof rawTop === 'string' ? parseInt(rawTop as string) : rawTop as number;
+        const valLeft = typeof rawLeft === 'string' ? parseInt(rawLeft as string) : rawLeft as number;
 
-        addStep('mismatch', {i, j}, [{i: i-1, j}, {i, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop, valLeft}, 27);
+        addStep('mismatch', {i, j}, [{i: i-1, j}, {i, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop, valLeft, partialLCS}, 27);
 
         if (valTop >= valLeft) {
           table[i-1][j].state = 'computed';
           table[i][j-1].state = 'computed';
           table[i][j].state = 'path';
-          addStep('backtrack_move_top', {i, j}, [{i: i-1, j}], {i, j, valTop, valLeft}, 28);
+          table[i][j].value = `${table[i][j].value} ↑`;
+          addStep('backtrack_move_top', {i, j}, [{i: i-1, j}], {i, j, valTop, valLeft, partialLCS}, 28);
           i--;
         } else {
           table[i-1][j].state = 'computed';
           table[i][j-1].state = 'computed';
           table[i][j].state = 'path';
-          addStep('backtrack_move_left', {i, j}, [{i, j: j-1}], {i, j, valTop, valLeft}, 30);
+          table[i][j].value = `${table[i][j].value} ←`;
+          addStep('backtrack_move_left', {i, j}, [{i, j: j-1}], {i, j, valTop, valLeft, partialLCS}, 30);
           j--;
         }
       }
     }
     table[i][j].state = 'path';
-    addStep('result', {i, j}, [], {n, m, result: finalRes}, 33);
+    addStep('result', {i, j}, [], {n, m, result: finalRes, partialLCS}, 33);
 
     return steps;
   }

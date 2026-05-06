@@ -114,31 +114,40 @@ export class LCSTabulation implements AlgorithmModule {
     // Backtracking
     let i = n;
     let j = m;
+    let partialLCS = "";
+    
     while (i > 0 && j > 0) {
       table[i][j].state = 'active';
-      addStep('compare', {i, j}, [], {i, j, char1: s1[i-1], char2: s2[j-1]}, 19);
+      addStep('compare', {i, j}, [], {i, j, char1: s1[i-1], char2: s2[j-1], partialLCS}, 19);
 
       if (s1[i-1] === s2[j-1]) {
         table[i][j].state = 'match';
-        addStep('backtrack_match', {i, j}, [{i: i-1, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1]}, 20);
+        table[i][j].value = `${table[i][j].value} ↖`;
+        partialLCS = s1[i-1] + partialLCS;
+        addStep('backtrack_match', {i, j}, [{i: i-1, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], partialLCS}, 20);
         i--;
         j--;
       } else {
         table[i-1][j].state = 'dependency';
         table[i][j-1].state = 'dependency';
-        addStep('mismatch', {i, j}, [{i: i-1, j}, {i, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop: table[i-1][j].value, valLeft: table[i][j-1].value}, 22);
+        const valTop = typeof table[i-1][j].value === 'string' ? parseInt(table[i-1][j].value as string) : table[i-1][j].value as number;
+        const valLeft = typeof table[i][j-1].value === 'string' ? parseInt(table[i][j-1].value as string) : table[i][j-1].value as number;
+        
+        addStep('mismatch', {i, j}, [{i: i-1, j}, {i, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop, valLeft, partialLCS}, 22);
 
-        if ((table[i-1][j].value as number) >= (table[i][j-1].value as number)) {
+        if (valTop >= valLeft) {
           table[i-1][j].state = 'computed';
           table[i][j-1].state = 'computed';
           table[i][j].state = 'path'; 
-          addStep('backtrack_move_top', {i, j}, [{i: i-1, j}], {i, j, valTop: table[i-1][j].value, valLeft: table[i][j-1].value}, 23);
+          table[i][j].value = `${table[i][j].value} ↑`;
+          addStep('backtrack_move_top', {i, j}, [{i: i-1, j}], {i, j, valTop, valLeft, partialLCS}, 23);
           i--;
         } else {
           table[i-1][j].state = 'computed';
           table[i][j-1].state = 'computed';
           table[i][j].state = 'path';
-          addStep('backtrack_move_left', {i, j}, [{i, j: j-1}], {i, j, valTop: table[i-1][j].value, valLeft: table[i][j-1].value}, 25);
+          table[i][j].value = `${table[i][j].value} ←`;
+          addStep('backtrack_move_left', {i, j}, [{i, j: j-1}], {i, j, valTop, valLeft, partialLCS}, 25);
           j--;
         }
       }
@@ -146,7 +155,7 @@ export class LCSTabulation implements AlgorithmModule {
     
     // Mark base case cell explicitly if reached
     table[i][j].state = 'path';
-    addStep('result', {i, j}, [], {n, m, result: table[n][m].value}, 28);
+    addStep('result', {i, j}, [], {n, m, result: table[n][m].value, partialLCS}, 28);
 
     return steps;
   }

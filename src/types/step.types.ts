@@ -52,8 +52,8 @@ export type CellVisualState =
 
 /** Represents the state of a single cell in the DP table */
 export interface CellState {
-  /** Cell value — null means not yet computed */
-  value: number | null;
+  /** Cell value — null means not yet computed. String is used for backtracking arrows. */
+  value: number | string | null;
   /** Visual state, mapped to CSS class dp-cell--{state} */
   state: CellVisualState;
 }

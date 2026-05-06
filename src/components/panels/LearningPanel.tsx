@@ -113,16 +113,16 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
         reasonText = `Excluding '${char2}' yields a longer subsequence than excluding '${char1}'.`;
         break;
       case 'backtrack_match':
-        actionText = `Characters match again ('${char1}'), so this character becomes part of the final LCS.`;
+        actionText = `Characters match again ('${char1}'), so this character belongs to the final subsequence.`;
         reasonText = `We successfully traced back a match, meaning we move diagonally up-left.`;
         break;
       case 'backtrack_move_top':
         actionText = `Move TOP to dp[${Number(i)-1}][${j}] during backtracking.`;
-        reasonText = `The top cell has a larger or equal value, meaning the optimal path came from there.`;
+        reasonText = `We move upward because it preserves the optimal subsequence length.`;
         break;
       case 'backtrack_move_left':
         actionText = `Move LEFT to dp[${i}][${Number(j)-1}] during backtracking.`;
-        reasonText = `The left cell has a larger value, meaning the optimal path came from there.`;
+        reasonText = `We move leftward because it preserves the optimal subsequence length.`;
         break;
       case 'cache_hit':
         actionText = `Retrieve state for indices [${i}][${j}] from cache.`;
