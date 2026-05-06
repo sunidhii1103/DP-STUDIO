@@ -21,6 +21,10 @@ export const VisualPanel: React.FC<VisualPanelProps> = ({
   isBetterTime,
   isBetterSpace
 }) => {
+  const isReconstructionPhase = 
+    (step.algorithm === 'lcs' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.partialLCS !== undefined))) ||
+    (step.algorithm === 'edit-distance' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.transformedStr !== undefined) || (['edit_replace', 'edit_delete', 'edit_insert'].includes(step.operation) && step.explanation?.variables?.transformedStr !== undefined)));
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
       {title && <h3 style={{ margin: 0, color: 'var(--color-text-primary)' }}>{title}</h3>}
@@ -54,11 +58,11 @@ export const VisualPanel: React.FC<VisualPanelProps> = ({
             fontWeight: 'bold', 
             padding: '4px 10px', 
             borderRadius: '12px', 
-            backgroundColor: step.algorithm === 'lcs' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.partialLCS !== undefined)) ? 'rgba(168, 85, 247, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-            color: step.algorithm === 'lcs' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.partialLCS !== undefined)) ? '#c084fc' : '#60a5fa',
-            border: `1px solid ${step.algorithm === 'lcs' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.partialLCS !== undefined)) ? 'rgba(168, 85, 247, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`
+            backgroundColor: isReconstructionPhase ? 'rgba(168, 85, 247, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+            color: isReconstructionPhase ? '#c084fc' : '#60a5fa',
+            border: `1px solid ${isReconstructionPhase ? 'rgba(168, 85, 247, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`
           }}>
-            {step.algorithm === 'lcs' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.partialLCS !== undefined)) ? "Backtracking Reconstruction Phase" : "DP Construction Phase"}
+            {isReconstructionPhase ? "Backtracking Reconstruction Phase" : "DP Construction Phase"}
           </span>
         </div>
         <div style={{ color: 'var(--color-text-primary)' }}>

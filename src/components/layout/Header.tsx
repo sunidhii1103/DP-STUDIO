@@ -1,12 +1,12 @@
 import React from 'react';
 
 interface HeaderProps {
-  algo: 'fibonacci' | 'knapsack' | 'lcs';
+  algo: 'fibonacci' | 'knapsack' | 'lcs' | 'edit-distance';
   fibN: number;
   knapCapacity: number;
   lcsS1: string;
   lcsS2: string;
-  setAlgo: (v: 'fibonacci' | 'knapsack' | 'lcs') => void;
+  setAlgo: (v: 'fibonacci' | 'knapsack' | 'lcs' | 'edit-distance') => void;
   setFibN: (v: number) => void;
   setKnapCapacity: (v: number) => void;
   setLcsS1: (v: string) => void;
@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span style={{ fontSize: '1.25rem', color: 'var(--color-text-primary)' }}>DP Studio</span>
         </div>
         <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)' }}></div>
-        <span style={{ color: 'var(--color-text-muted)', fontWeight: 'bold' }}>{algo === 'fibonacci' ? `Fibonacci (n = ${fibN})` : algo === 'knapsack' ? `0/1 Knapsack (Cap = ${knapCapacity})` : `LCS (${lcsS1}, ${lcsS2})`}</span>
+        <span style={{ color: 'var(--color-text-muted)', fontWeight: 'bold' }}>{algo === 'fibonacci' ? `Fibonacci (n = ${fibN})` : algo === 'knapsack' ? `0/1 Knapsack (Cap = ${knapCapacity})` : algo === 'edit-distance' ? `Edit Distance (${lcsS1}, ${lcsS2})` : `LCS (${lcsS1}, ${lcsS2})`}</span>
       </div>
       
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -62,6 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
             <option value="fibonacci">Fibonacci</option>
             <option value="knapsack">0/1 Knapsack</option>
             <option value="lcs">LCS</option>
+            <option value="edit-distance">Edit Distance</option>
           </select>
           
           {algo === 'fibonacci' && (
@@ -98,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
             />
           )}
 
-          {algo === 'lcs' && (
+          {(algo === 'lcs' || algo === 'edit-distance') && (
             <>
               <input 
                 type="text" 

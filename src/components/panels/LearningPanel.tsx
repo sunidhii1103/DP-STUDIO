@@ -136,6 +136,66 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
         actionText = `Operation: ${operationType} at state [${i}][${j}].`;
         reasonText = `Progressing the LCS matrix.`;
     }
+  } else if (algorithm === 'edit-distance') {
+    const { char1, char2, i, j } = variables;
+    
+    switch (operationType) {
+      case 'initialize':
+        actionText = `Initialize base case for row ${i} or column ${j}.`;
+        reasonText = `To transform an empty string to a string of length N requires N insertions/deletions.`;
+        break;
+      case 'compare':
+        actionText = `Compare character '${char1}' with '${char2}'.`;
+        reasonText = `We must determine if the characters match to see if a substitution operation is required.`;
+        break;
+      case 'edit_match':
+        actionText = `Characters '${char1}' and '${char2}' match!`;
+        reasonText = `No operation is needed. We inherit the cost from the diagonal state dp[${Number(i)-1}][${Number(j)-1}].`;
+        break;
+      case 'compute':
+        actionText = `Evaluate minimum cost among Insert, Delete, and Replace.`;
+        reasonText = `Since characters differ, we find the cheapest operation path that led to this state.`;
+        break;
+      case 'edit_replace':
+        actionText = variables.transformedStr !== undefined ? `Apply transformation: Replace '${char1}' with '${char2}'.` : `We chose to REPLACE '${char1}' with '${char2}'.`;
+        reasonText = variables.transformedStr !== undefined ? `Transforming the string forward.` : `Replacement was the optimal choice compared to inserting or deleting. Cost increases by 1 from the diagonal.`;
+        break;
+      case 'edit_delete':
+        actionText = variables.transformedStr !== undefined ? `Apply transformation: Delete '${char1}'.` : `We chose to DELETE '${char1}' from the source string.`;
+        reasonText = variables.transformedStr !== undefined ? `Transforming the string forward.` : `Deletion was the optimal choice. Cost increases by 1 from the top cell.`;
+        break;
+      case 'edit_insert':
+        actionText = variables.transformedStr !== undefined ? `Apply transformation: Insert '${char2}'.` : `We chose to INSERT '${char2}' into the source string.`;
+        reasonText = variables.transformedStr !== undefined ? `Transforming the string forward.` : `Insertion was the optimal choice. Cost increases by 1 from the left cell.`;
+        break;
+      case 'backtrack_edit_match':
+        actionText = `Tracing path: Characters matched ('${char1}').`;
+        reasonText = `We successfully traced back a free match, meaning we move diagonally up-left without adding an operation.`;
+        break;
+      case 'backtrack_edit_replace':
+        actionText = `Tracing path: Replace '${char1}' with '${char2}'.`;
+        reasonText = `This operation was chosen as part of the optimal edit path. We move diagonally.`;
+        break;
+      case 'backtrack_edit_delete':
+        actionText = `Tracing path: Delete '${char1}'.`;
+        reasonText = `We move upward along the optimal sequence of operations.`;
+        break;
+      case 'backtrack_edit_insert':
+        actionText = `Tracing path: Insert '${char2}'.`;
+        reasonText = `We move leftward along the optimal sequence of operations.`;
+        break;
+      case 'cache_hit':
+        actionText = `Retrieve state for indices [${i}][${j}] from cache.`;
+        reasonText = `This subproblem was already solved in a previous recursive branch. We reuse it to save time.`;
+        break;
+      case 'recurse':
+        actionText = `Evaluate Edit Distance state [${i}][${j}].`;
+        reasonText = `We must recursively explore the tree for this state to find the optimal choice.`;
+        break;
+      default:
+        actionText = `Operation: ${operationType} at state [${i}][${j}].`;
+        reasonText = `Progressing the Edit Distance matrix.`;
+    }
   } else {
     // Generic fallback for other algorithms
     actionText = `Executing ${operationType} operation.`;
@@ -160,13 +220,23 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
       } else {
         conceptText = `When characters mismatch, the optimal solution is the maximum of ignoring the current character from text1 or ignoring the current character from text2.`;
       }
+    } else if (algorithm === 'edit-distance') {
+      conceptTitle = 'State Transition (Optimal Substructure)';
+      if (operationType === 'edit_match') {
+        conceptText = `When characters match, the edit distance is identical to the prefixes without these characters.`;
+      } else {
+        conceptText = `When characters mismatch, the optimal solution is exactly 1 operation plus the minimum of Replacing (diagonal), Deleting (top), or Inserting (left).`;
+      }
     } else {
       conceptTitle = 'State Transition (Optimal Substructure)';
       conceptText = `To solve for the current state, we don't need to recalculate from scratch. The optimal solution is built purely from the optimal solutions of its immediate subproblems.`;
     }
   } else if (operationType?.toString().startsWith('backtrack')) {
     conceptTitle = 'Reconstruction Path';
-    conceptText = `The DP table stores the length of the optimal solution. To find the actual subsequence, we trace the path of choices backwards from the final cell.`;
+    conceptText = `The DP table stores the optimal cost. To find the actual sequence of decisions, we trace the path of choices backwards from the final cell.`;
+  } else if (['edit_replace', 'edit_delete', 'edit_insert'].includes(operationType?.toString() ?? '') && variables.transformedStr !== undefined) {
+    conceptTitle = 'Sequence Transformation';
+    conceptText = `We are now applying the reconstructed operations in forward chronological order to visually transform the source string into the target string.`;
   }
 
   // Hide generic non-learning steps if no clear action/reason was generated

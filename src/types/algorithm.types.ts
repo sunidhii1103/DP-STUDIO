@@ -31,8 +31,15 @@ export interface LCSInput {
   s2: string;
 }
 
+export interface EditDistanceInput {
+  /** First string, max length: 12 */
+  s1: string;
+  /** Second string, max length: 12 */
+  s2: string;
+}
+
 /** Union of all possible algorithm inputs */
-export type AlgorithmInput = FibonacciInput | KnapsackInput | LCSInput;
+export type AlgorithmInput = FibonacciInput | KnapsackInput | LCSInput | EditDistanceInput;
 
 /* ── Validation ───────────────────────────────────────────────────────────── */
 

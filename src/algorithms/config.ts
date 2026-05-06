@@ -82,6 +82,41 @@ const LCS_MEMOIZATION_CODE = [
   "}"
 ];
 
+const EDIT_DISTANCE_TABULATION_CODE = [
+  "function editDistance(s1, s2) {",
+  "  const dp = Array(s1.length + 1).fill().map(() => Array(s2.length + 1).fill(0));",
+  "  for (let i = 0; i <= s1.length; i++) dp[i][0] = i;",
+  "  for (let j = 0; j <= s2.length; j++) dp[0][j] = j;",
+  "  for (let i = 1; i <= s1.length; i++) {",
+  "    for (let j = 1; j <= s2.length; j++) {",
+  "      if (s1[i-1] === s2[j-1]) {",
+  "        dp[i][j] = dp[i-1][j-1];",
+  "      } else {",
+  "        dp[i][j] = 1 + Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);",
+  "      }",
+  "    }",
+  "  }",
+  "  return dp[s1.length][s2.length];",
+  "}"
+];
+
+const EDIT_DISTANCE_MEMOIZATION_CODE = [
+  "function editDistance(i, j) {",
+  "  if (i === 0) return j;",
+  "  if (j === 0) return i;",
+  "  if (memo[i][j]) return memo[i][j];",
+  "  if (s1[i-1] === s2[j-1]) {",
+  "    memo[i][j] = editDistance(i-1, j-1);",
+  "  } else {",
+  "    const replace = editDistance(i-1, j-1);",
+  "    const del = editDistance(i-1, j);",
+  "    const insert = editDistance(i, j-1);",
+  "    memo[i][j] = 1 + Math.min(replace, del, insert);",
+  "  }",
+  "  return memo[i][j];",
+  "}"
+];
+
 export const uiRegistry = {
   fibonacci: {
     generateSteps: (input: any) => ({
@@ -105,12 +140,22 @@ export const uiRegistry = {
   },
   lcs: {
     generateSteps: (input: any) => ({
-      tabulation: algorithmRegistry.lcs.tabulation.generateSteps(input),
-      memoization: algorithmRegistry.lcs.memoization.generateSteps(input)
+      tabulation: algorithmRegistry.lcs.tabulation!.generateSteps(input),
+      memoization: algorithmRegistry.lcs.memoization!.generateSteps(input)
     }),
     code: {
       tabulation: LCS_TABULATION_CODE,
       memoization: LCS_MEMOIZATION_CODE
+    }
+  },
+  'edit-distance': {
+    generateSteps: (input: any) => ({
+      tabulation: algorithmRegistry['edit-distance'].tabulation!.generateSteps(input),
+      memoization: algorithmRegistry['edit-distance'].memoization!.generateSteps(input)
+    }),
+    code: {
+      tabulation: EDIT_DISTANCE_TABULATION_CODE,
+      memoization: EDIT_DISTANCE_MEMOIZATION_CODE
     }
   }
 };

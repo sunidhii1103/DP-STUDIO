@@ -16,7 +16,7 @@ import { usePlayback } from '../hooks/usePlayback';
 import type { Step } from '../types/step.types';
 
 type Mode = 'single' | 'comparison';
-type AlgorithmSelection = 'fibonacci' | 'knapsack' | 'lcs';
+type AlgorithmSelection = 'fibonacci' | 'knapsack' | 'lcs' | 'edit-distance';
 
 export const VisualizerPage: React.FC = () => {
   const [mode, setMode] = useState<Mode>('single');
@@ -177,6 +177,74 @@ export const VisualizerPage: React.FC = () => {
       }
       if (operationType === 'recurse') {
         return <p style={{ fontSize: '1.1rem', margin: 0 }}>Recurse: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 4px', borderRadius: '4px', color: 'var(--color-warning)' }}>lcs({variables.i}, {variables.j})</code></p>;
+      }
+      return null;
+    }
+
+    if (step.algorithm === 'edit-distance') {
+      if (operationType === 'initialize') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Initialize Base Case: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>dp[{variables.i}][{variables.j}] = {variables.val}</code></p>;
+      }
+      if (operationType === 'compare') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Compare characters: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>'{variables.char1}' == '{variables.char2}'</code></p>;
+      }
+      if (operationType === 'edit_match') {
+        return <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-success)' }}>Characters Match! <br/><span style={{fontSize: '0.9rem'}}>No operation needed. Inherit cost: {variables.valDiag}</span></p>;
+      }
+      if (operationType === 'compute') {
+        return <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-warning)' }}>Mismatch.<br/><span style={{fontSize: '0.9rem', color: 'var(--color-text-secondary)'}}>Evaluating min of REPLACE ({variables.vReplace}), DELETE ({variables.vDelete}), INSERT ({variables.vInsert}).</span></p>;
+      }
+      if (operationType === 'edit_replace' || operationType === 'edit_delete' || operationType === 'edit_insert') {
+        if (variables.transformedStr !== undefined) {
+           return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-info)' }}>
+                <strong>Applying Operation:</strong> {variables.op}
+              </p>
+              <p style={{ fontSize: '1.2rem', margin: 0, fontWeight: 'bold', color: 'var(--color-success)' }}>
+                 Current String: <code style={{ padding: '2px 6px', backgroundColor: 'var(--color-bg-tertiary)', borderRadius: '4px' }}>{variables.transformedStr}</code>
+              </p>
+            </div>
+          );
+        }
+        const type = operationType.replace('edit_', '').toUpperCase();
+        return <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-error)' }}>Chosen: <strong>{type}</strong><br/><span style={{fontSize: '0.9rem'}}>Cost = 1 + {variables.minVal}</span></p>;
+      }
+      if (operationType?.startsWith('backtrack_edit')) {
+        let text = "";
+        if (operationType === 'backtrack_edit_match') text = `Characters match ('${variables.char1}'), moving diagonally ↖`;
+        else if (operationType === 'backtrack_edit_replace') text = `REPLACE '${variables.char1}' with '${variables.char2}', moving diagonally ↖`;
+        else if (operationType === 'backtrack_edit_delete') text = `DELETE '${variables.char1}', moving top ↑`;
+        else if (operationType === 'backtrack_edit_insert') text = `INSERT '${variables.char2}', moving left ←`;
+        
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+             <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-info)' }}>
+               <strong>Backtracking Phase:</strong> {text}
+             </p>
+          </div>
+        );
+      }
+      if (operationType === 'result') {
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <p style={{ fontSize: '1.1rem', margin: 0 }}>Algorithm complete! Min Operations: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px', color: 'var(--color-success)' }}>{variables.result}</code></p>
+            {variables.transformedStr !== undefined && (
+               <p style={{ fontSize: '1.2rem', margin: 0, fontWeight: 'bold', color: 'var(--color-success)' }}>
+                 Final Transformed String: <code style={{ padding: '2px 6px', backgroundColor: 'var(--color-bg-tertiary)', borderRadius: '4px' }}>{variables.transformedStr}</code>
+               </p>
+            )}
+          </div>
+        );
+      }
+      if (operationType === 'cache_hit') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Cache Hit: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 4px', borderRadius: '4px', color: 'var(--color-info)' }}>memo[{variables.i}][{variables.j}] = {variables.cachedValue}</code></p>;
+      }
+      if (operationType === 'read') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Read State: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 4px', borderRadius: '4px' }}>dp[{variables.i}][{variables.j}]</code></p>;
+      }
+      if (operationType === 'recurse') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Recurse: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 4px', borderRadius: '4px', color: 'var(--color-warning)' }}>editDistance(...)</code></p>;
       }
       return null;
     }

@@ -9,7 +9,7 @@
 /* ── Core Enums / Unions ──────────────────────────────────────────────────── */
 
 /** Supported algorithm identifiers */
-export type AlgorithmId = 'fibonacci' | 'knapsack' | 'lcs';
+export type AlgorithmId = 'fibonacci' | 'knapsack' | 'lcs' | 'edit-distance';
 
 /** Supported approach strategies */
 export type Approach = 'brute_force' | 'memoization' | 'tabulation';
@@ -35,7 +35,16 @@ export type OperationType =
   | 'choose_left'
   | 'backtrack_match'
   | 'backtrack_move_top'
-  | 'backtrack_move_left';
+  | 'backtrack_move_left'
+  // Edit Distance Specific Actions
+  | 'edit_match'
+  | 'edit_insert'
+  | 'edit_delete'
+  | 'edit_replace'
+  | 'backtrack_edit_match'
+  | 'backtrack_edit_insert'
+  | 'backtrack_edit_delete'
+  | 'backtrack_edit_replace';
 
 /** Visual state of a single DP table cell (drives CSS classes per AGENTS.md §2.1) */
 export type CellVisualState =
