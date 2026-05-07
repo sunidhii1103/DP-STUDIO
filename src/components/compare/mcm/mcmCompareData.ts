@@ -12,6 +12,8 @@ export interface MCMCallNode {
   label: string;
   stateKey: string;
   occurrence: number;
+  totalOccurrences: number;
+  parentId: string | null;
   isRepeated: boolean;
   children: string[];
   result?: number;
@@ -24,6 +26,7 @@ export interface MCMRecursiveFrame {
   stats: {
     calls: number;
     repeatedStates: number;
+    repeatedIntervals: number;
     depth: number;
     estimatedGrowth: number;
   };
@@ -39,6 +42,7 @@ export interface MCMMemoFrame {
     computedOnce: number;
     cacheHits: number;
     savedCalls: number;
+    reusePercentage: number;
   };
   message: string;
 }
@@ -46,10 +50,26 @@ export interface MCMMemoFrame {
 export interface MCMTabulationFrame {
   step: Step | null;
   intervalLength: number | null;
+  activeDiagonalKeys: string[];
+  completedDiagonalKeys: string[];
+  dependencyKeys: string[];
+  activeCellKey: string | null;
   interval: string;
   formula: string;
   bestSplit: string;
+  traversalLabel: string;
+  statesFilledOnce: number;
+  dependencyReuseCount: number;
+  deterministicTraversal: string;
   message: string;
+}
+
+export interface MCMCompareSummary {
+  recursiveCalls: number;
+  memoizedStates: number;
+  savedWork: number;
+  redundantAvoidedPercentage: number;
+  tabulatedStates: number;
 }
 
 export interface MCMCompareFrame {
@@ -63,6 +83,7 @@ export interface MCMCompareFrame {
 export interface MCMCompareTimeline {
   frames: MCMCompareFrame[];
   recursiveNodes: MCMCallNode[];
+  summary: MCMCompareSummary;
   matrixCount: number;
   isLimited: boolean;
 }
@@ -86,6 +107,10 @@ interface MemoEvent {
 const stateKey = (i: number, j: number) => `${i},${j}`;
 
 const intervalLabel = (i: number, j: number) => i === j ? `A${i + 1}` : `A${i + 1}..A${j + 1}`;
+
+const upperTriangleStateCount = (matrixCount: number) => (matrixCount * (matrixCount + 1)) / 2;
+
+const percent = (part: number, total: number) => total <= 0 ? 0 : Math.round((part / total) * 100);
 
 const clampPick = <T,>(items: T[], globalIndex: number, totalFrames: number): T | null => {
   if (items.length === 0) return null;
@@ -133,6 +158,7 @@ function buildRecursiveEvents(dimensions: number[], matrixCount: number) {
   const nodeById = new Map<string, MCMCallNode>();
   const events: RecursiveEvent[] = [];
   const seenCounts = new Map<string, number>();
+  const repeatedIntervalKeys = new Set<string>();
   const visibleNodeIds: string[] = [];
   let calls = 0;
   let repeatedStates = 0;
@@ -145,6 +171,7 @@ function buildRecursiveEvents(dimensions: number[], matrixCount: number) {
       stats: {
         calls,
         repeatedStates,
+        repeatedIntervals: repeatedIntervalKeys.size,
         depth: maxDepth + 1,
         estimatedGrowth: Math.max(1, Math.round(Math.pow(2, Math.max(0, matrixCount - 1)))),
       },
@@ -157,7 +184,10 @@ function buildRecursiveEvents(dimensions: number[], matrixCount: number) {
     const occurrence = (seenCounts.get(key) ?? 0) + 1;
     seenCounts.set(key, occurrence);
     calls++;
-    if (occurrence > 1) repeatedStates++;
+    if (occurrence > 1) {
+      repeatedStates++;
+      repeatedIntervalKeys.add(key);
+    }
     maxDepth = Math.max(maxDepth, depth);
 
     const id = `r-${nodes.length}`;
@@ -169,6 +199,8 @@ function buildRecursiveEvents(dimensions: number[], matrixCount: number) {
       label: `solve(${i + 1},${j + 1})`,
       stateKey: key,
       occurrence,
+      totalOccurrences: occurrence,
+      parentId,
       isRepeated: occurrence > 1,
       children: [],
     };
@@ -183,7 +215,7 @@ function buildRecursiveEvents(dimensions: number[], matrixCount: number) {
     snapshot(
       id,
       occurrence > 1
-        ? `${intervalLabel(i, j)} appears again: overlapping subproblem exposed.`
+        ? `${intervalLabel(i, j)} is recomputed by brute force instead of reused.`
         : `Expanding recursive call ${node.label}.`
     );
 
@@ -209,6 +241,9 @@ function buildRecursiveEvents(dimensions: number[], matrixCount: number) {
   };
 
   visit(0, matrixCount - 1, 0, null);
+  nodes.forEach((node) => {
+    node.totalOccurrences = seenCounts.get(node.stateKey) ?? node.occurrence;
+  });
   return { nodes, events };
 }
 
@@ -220,15 +255,17 @@ function buildMemoEvents(dimensions: number[], matrixCount: number): MemoEvent[]
   let savedCalls = 0;
 
   const emit = (activeKey: string | null, cacheHitKey: string | null, message: string) => {
+    const computedOnce = memo.size;
     events.push({
       activeKey,
       computedKeys: [...memo.keys()],
       cacheHitKey,
       pendingKeys: [...pendingKeys],
       metrics: {
-        computedOnce: memo.size,
+        computedOnce,
         cacheHits,
         savedCalls,
+        reusePercentage: percent(cacheHits, cacheHits + computedOnce),
       },
       message,
     });
@@ -240,7 +277,7 @@ function buildMemoEvents(dimensions: number[], matrixCount: number): MemoEvent[]
 
     if (memo.has(key)) {
       cacheHits++;
-      savedCalls += Math.max(1, j - i);
+      savedCalls++;
       emit(key, key, `Cache hit: reuse ${intervalLabel(i, j)} without expanding its subtree.`);
       return memo.get(key)!;
     }
@@ -279,15 +316,31 @@ function buildTabulationFrame(step: Step | null): MCMTabulationFrame {
     return {
       step: null,
       intervalLength: null,
+      activeDiagonalKeys: [],
+      completedDiagonalKeys: [],
+      dependencyKeys: [],
+      activeCellKey: null,
       interval: 'No tabulation step',
       formula: 'dp[i][j] = min over k',
       bestSplit: '-',
+      traversalLabel: 'Waiting for tabulation data',
+      statesFilledOnce: 0,
+      dependencyReuseCount: 0,
+      deterministicTraversal: 'Not started',
       message: 'Tabulation data is not available.',
     };
   }
 
   const variables = step.explanation?.variables ?? {};
-  const intervalLength = typeof variables.chainLength === 'number' ? variables.chainLength : null;
+  const metadata = step.tableSnapshot.metadata ?? {};
+  const matrixCount = step.tableSnapshot.dimensions === 2 ? step.tableSnapshot.cells.length : 0;
+  const metadataLength = typeof metadata.activeChainLength === 'number' ? metadata.activeChainLength : null;
+  const intervalLength = typeof variables.chainLength === 'number' ? variables.chainLength : metadataLength;
+  const activeCellKey = typeof metadata.activeCellKey === 'string'
+    ? metadata.activeCellKey
+    : step.activeIndices.j !== undefined
+      ? `${step.activeIndices.i},${step.activeIndices.j}`
+      : null;
   const interval = typeof variables.interval === 'string'
     ? variables.interval
     : step.activeIndices.j !== undefined
@@ -297,13 +350,46 @@ function buildTabulationFrame(step: Step | null): MCMTabulationFrame {
     ? variables.formula
     : 'dp[i][j] = min(dp[i][k] + dp[k+1][j] + p[i]*p[k+1]*p[j+1])';
   const bestSplit = typeof variables.k === 'number' ? `k = ${variables.k}` : '-';
+  const activeDiagonalKeys = intervalLength && intervalLength > 0
+    ? Array.from({ length: Math.max(0, matrixCount - intervalLength + 1) }, (_unused, i) => `${i},${i + intervalLength - 1}`)
+    : [];
+  const completedDiagonalKeys = intervalLength
+    ? Array.from({ length: matrixCount }, (_unused, i) => i)
+      .flatMap((i) => Array.from({ length: Math.max(0, intervalLength - 1) }, (_unused, lenIndex) => {
+        const len = lenIndex + 1;
+        return i + len - 1 < matrixCount ? `${i},${i + len - 1}` : null;
+      }))
+      .filter((key): key is string => key !== null)
+    : [];
+  const dependencyKeys = (step.dependencyIndices ?? [])
+    .filter((dep) => dep.j !== undefined)
+    .map((dep) => `${dep.i},${dep.j}`);
+  const statesFilledOnce = step.tableSnapshot.dimensions === 2
+    ? step.tableSnapshot.cells.reduce((count, row, i) => (
+      count + row.filter((cell, j) => i <= j && cell.value !== null).length
+    ), 0)
+    : 0;
+  const dependencyReuseCount = step.metrics?.totalOperationsSoFar
+    ? step.metrics.totalOperationsSoFar * 2
+    : dependencyKeys.length;
+  const traversalLabel = intervalLength && intervalLength > 1
+    ? `Processing interval length = ${intervalLength}`
+    : 'Seeding base diagonal';
 
   return {
     step,
     intervalLength,
+    activeDiagonalKeys,
+    completedDiagonalKeys,
+    dependencyKeys,
+    activeCellKey,
     interval,
     formula,
     bestSplit,
+    traversalLabel,
+    statesFilledOnce,
+    dependencyReuseCount,
+    deterministicTraversal: intervalLength && intervalLength > 1 ? 'Shorter intervals first' : 'Base cases first',
     message: String(variables.desc ?? `Bottom-up step: ${step.operation.replace(/_/g, ' ')}.`),
   };
 }
@@ -332,7 +418,7 @@ export function createMCMCompareTimeline(dimensions: number[], tabulationSteps: 
           visibleNodeIds: [],
           activeNodeId: null,
           repeatedNodeIds: [],
-          stats: { calls: 0, repeatedStates: 0, depth: 0, estimatedGrowth: 0 },
+          stats: { calls: 0, repeatedStates: 0, repeatedIntervals: 0, depth: 0, estimatedGrowth: 0 },
           message: 'Enter at least two matrices.',
         },
         memoization: {
@@ -340,12 +426,19 @@ export function createMCMCompareTimeline(dimensions: number[], tabulationSteps: 
           computedKeys: [],
           cacheHitKey: null,
           pendingKeys: [],
-          metrics: { computedOnce: 0, cacheHits: 0, savedCalls: 0 },
+          metrics: { computedOnce: 0, cacheHits: 0, savedCalls: 0, reusePercentage: 0 },
           message: 'Memo table is waiting for a valid chain.',
         },
         tabulation: buildTabulationFrame(fallback),
       }],
       recursiveNodes: [],
+      summary: {
+        recursiveCalls: 0,
+        memoizedStates: 0,
+        savedWork: 0,
+        redundantAvoidedPercentage: 0,
+        tabulatedStates: 0,
+      },
       matrixCount: compareMatrixCount,
       isLimited,
     };
@@ -357,6 +450,18 @@ export function createMCMCompareTimeline(dimensions: number[], tabulationSteps: 
     ? tabulationSteps
     : [makeFallbackTabStep(compareMatrixCount)];
   const totalFrames = Math.max(recursiveEvents.length, memoEvents.length, relevantTabSteps.length, 1);
+  const finalRecursive = recursiveEvents[recursiveEvents.length - 1]?.stats;
+  const finalMemo = memoEvents[memoEvents.length - 1]?.metrics;
+  const recursiveCalls = finalRecursive?.calls ?? 0;
+  const memoizedStates = finalMemo?.computedOnce ?? 0;
+  const savedWork = Math.max(0, recursiveCalls - memoizedStates);
+  const summary: MCMCompareSummary = {
+    recursiveCalls,
+    memoizedStates,
+    savedWork,
+    redundantAvoidedPercentage: percent(savedWork, recursiveCalls),
+    tabulatedStates: upperTriangleStateCount(compareMatrixCount),
+  };
 
   const frames: MCMCompareFrame[] = Array.from({ length: totalFrames }, (_, index) => {
     const recursiveEvent = clampPick(recursiveEvents, index, totalFrames) ?? recursiveEvents[0]!;
@@ -387,6 +492,7 @@ export function createMCMCompareTimeline(dimensions: number[], tabulationSteps: 
   return {
     frames,
     recursiveNodes: nodes,
+    summary,
     matrixCount: compareMatrixCount,
     isLimited,
   };

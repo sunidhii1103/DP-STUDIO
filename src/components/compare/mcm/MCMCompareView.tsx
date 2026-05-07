@@ -3,8 +3,10 @@ import { RecursivePanel } from './RecursivePanel';
 import { MemoPanel } from './MemoPanel';
 import { TabulationPanel } from './TabulationPanel';
 import { SharedPlaybackController } from './SharedPlaybackController';
+import { ComparisonStats } from './ComparisonStats';
 import type { MCMComparePanelId, MCMCompareTimeline } from './mcmCompareData';
 import type { Speed } from '../../../hooks/usePlayback';
+import './mcmCompare.css';
 
 interface MCMCompareViewProps {
   timeline: MCMCompareTimeline;
@@ -51,6 +53,8 @@ export const MCMCompareView: React.FC<MCMCompareViewProps> = ({
         speed={speed}
         phaseLabel={frame.phaseLabel}
       />
+
+      <ComparisonStats frame={frame} summary={timeline.summary} />
 
       <div className="mcm-mobile-tabs" role="tablist" aria-label="MCM comparison panels">
         {panelTabs.map((tab) => (

@@ -42,8 +42,15 @@ export const MemoPanel: React.FC<MemoPanelProps> = ({ frame, matrixCount }) => {
                   isActive ? 'mcm-memo-cell--active' : '',
                   isHit ? 'mcm-memo-cell--hit' : '',
                 ].filter(Boolean).join(' ')}
+                title={isHit ? 'cache hit: reused memoized state' : isComputed ? 'memoized state available for reuse' : undefined}
               >
-                {isInvalid ? '' : `A${i + 1}${j === i ? '' : `-${j + 1}`}`}
+                {!isInvalid && (
+                  <>
+                    <span>{`A${i + 1}${j === i ? '' : `-${j + 1}`}`}</span>
+                    {isHit && <small>cache hit</small>}
+                    {!isHit && isComputed && <small>memoized</small>}
+                  </>
+                )}
               </div>
             );
           })
@@ -56,6 +63,7 @@ export const MemoPanel: React.FC<MemoPanelProps> = ({ frame, matrixCount }) => {
         <div><strong>{frame.metrics.computedOnce}</strong><span>Computed Once</span></div>
         <div><strong>{frame.metrics.cacheHits}</strong><span>Cache Hits</span></div>
         <div><strong>{frame.metrics.savedCalls}</strong><span>Saved Calls</span></div>
+        <div><strong>{frame.metrics.reusePercentage}%</strong><span>Reuse</span></div>
       </div>
 
       <div className="mcm-compare-teaching-card">
