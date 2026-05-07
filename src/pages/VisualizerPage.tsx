@@ -11,6 +11,8 @@ import { ResizableLayout } from '../components/layout/ResizableLayout';
 import { VisualPanel } from '../components/panels/VisualPanel';
 import { CodePanel } from '../components/panels/CodePanel';
 import { ComparisonPanel } from '../components/panels/ComparisonPanel';
+import { MCMCompareView } from '../components/compare/mcm/MCMCompareView';
+import { createMCMCompareTimeline } from '../components/compare/mcm/mcmCompareData';
 
 import { usePlayback } from '../hooks/usePlayback';
 import type { AlgorithmId, Step } from '../types/step.types';
@@ -120,9 +122,16 @@ export const VisualizerPage: React.FC = () => {
     }
   }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, parsedMCM]);
 
-  const totalSteps = mode === 'single' 
-    ? tabulationSteps.length 
-    : Math.max(tabulationSteps.length, memoizationSteps.length);
+  const mcmCompareTimeline = React.useMemo(() => {
+    if (algo !== 'mcm' || parsedMCM.error) return null;
+    return createMCMCompareTimeline(parsedMCM.dimensions, tabulationSteps);
+  }, [algo, parsedMCM, tabulationSteps]);
+
+  const totalSteps = mode === 'single'
+    ? tabulationSteps.length
+    : algo === 'mcm'
+      ? (mcmCompareTimeline?.frames.length ?? 0)
+      : Math.max(tabulationSteps.length, memoizationSteps.length);
 
   const {
     currentStepIndex,
@@ -140,12 +149,6 @@ export const VisualizerPage: React.FC = () => {
     setCurrentStepIndex(0);
     pause();
   }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, mcmDimensions, setCurrentStepIndex, pause]);
-
-  useEffect(() => {
-    if (algo === 'mcm' && mode === 'comparison') {
-      setMode('single');
-    }
-  }, [algo, mode]);
 
   const toggleMode = () => {
     pause();
@@ -471,6 +474,12 @@ export const VisualizerPage: React.FC = () => {
                 activeLine={currentTabStep.codeReference?.lineNumber || 1} 
               />
             }
+          />
+        ) : algo === 'mcm' && mcmCompareTimeline ? (
+          <MCMCompareView
+            timeline={mcmCompareTimeline}
+            currentStepIndex={currentStepIndex}
+            speed={speed}
           />
         ) : (
           <div style={{ padding: '0.5rem', height: '100%', overflow: 'hidden' }}>

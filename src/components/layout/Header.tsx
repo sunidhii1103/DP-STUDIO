@@ -197,8 +197,7 @@ export const Header: React.FC<HeaderProps> = ({
             Single
           </button>
           <button 
-            onClick={() => { if (algo !== 'mcm' && mode !== 'comparison') toggleMode() }}
-            disabled={algo === 'mcm'}
+            onClick={() => { if (mode !== 'comparison') toggleMode() }}
             style={{
               padding: '0.4rem 1rem',
               backgroundColor: mode === 'comparison' ? 'var(--color-accent-primary)' : 'transparent',
