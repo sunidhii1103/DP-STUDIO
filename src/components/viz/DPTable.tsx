@@ -70,6 +70,9 @@ export const DPTable: React.FC<DPTableProps> = ({ snapshot, activeIndices }) => 
   const boundaryCells = new Set((metadata.boundaryCells as string[] | undefined) ?? []);
   const pathCells = new Set((metadata.pathCells as string[] | undefined) ?? []);
   const splitCells = new Set((metadata.splitCells as string[] | undefined) ?? []);
+  const activeChainLength = typeof metadata.activeChainLength === 'number' ? metadata.activeChainLength : null;
+  const activeCellKey = typeof metadata.activeCellKey === 'string' ? metadata.activeCellKey : null;
+  const isReconstructionPhase = metadata.phase === 'reconstruction';
 
   // 2D rendering
   return (
@@ -94,9 +97,16 @@ export const DPTable: React.FC<DPTableProps> = ({ snapshot, activeIndices }) => 
             const isActiveIndex = activeIndices && activeIndices.i === i && activeIndices.j === j;
             const isLowerIntervalCell = isIntervalTable && i > j;
             const split = splitTable?.[i]?.[j];
+            const intervalLength = j - i + 1;
+            const isActiveDiagonal = isIntervalTable && !isLowerIntervalCell && activeChainLength === intervalLength;
+            const isPreviousDiagonal = isIntervalTable && !isLowerIntervalCell && activeChainLength !== null && intervalLength < activeChainLength;
+            const isTraversalHead = activeCellKey === `${i},${j}`;
             const extraClasses = [
               isIntervalTable ? 'interval-cell' : '',
               isLowerIntervalCell ? 'interval-cell--empty' : '',
+              isActiveDiagonal && !isReconstructionPhase ? 'interval-cell--active-diagonal' : '',
+              isPreviousDiagonal && !isReconstructionPhase ? 'interval-cell--previous-diagonal' : '',
+              isTraversalHead && !isReconstructionPhase ? 'interval-cell--traversal-head' : '',
               boundaryCells.has(`${i},${j}`) ? 'interval-cell--boundary' : '',
               pathCells.has(`${i},${j}`) ? 'interval-cell--reconstruction-path' : '',
               splitCells.has(`${i},${j}`) ? 'interval-cell--chosen-split' : '',

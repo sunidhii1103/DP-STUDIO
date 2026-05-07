@@ -381,6 +381,9 @@ export class MCMTabulation implements AlgorithmModule {
         boundaryCells,
         pathCells,
         splitCells,
+        activeChainLength: active && active.i <= active.j ? active.j - active.i + 1 : null,
+        activeCellKey: active ? `${active.i},${active.j}` : null,
+        phase: pathCells.length > 0 ? 'reconstruction' : 'dp-fill',
       },
     };
   }

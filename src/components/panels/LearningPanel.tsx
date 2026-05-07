@@ -262,6 +262,9 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
   } else if (conceptNoteType === 'base_case' || operationType === 'initialize') {
     conceptTitle = 'Base Case Initialization';
     conceptText = `Dynamic programming relies on trivial base cases. We know immediately what the answer is without any complex computation. We store this to build larger answers.`;
+  } else if (algorithm === 'mcm' && operationType === 'chain_length') {
+    conceptTitle = 'Diagonal Interval Traversal';
+    conceptText = `Intervals are solved diagonally because every longer chain depends on shorter chains that must already be available.`;
   } else if (operationType === 'compute' || operationType === 'match' || operationType === 'mismatch' || operationType === 'choose_top' || operationType === 'choose_left' || operationType === 'edit_match' || operationType === 'try_split' || operationType === 'calculate_cost' || operationType === 'update_min' || operationType === 'final_decision') {
     if (algorithm === 'knapsack') {
       conceptTitle = 'Decision Making (Optimal Substructure)';
@@ -288,8 +291,13 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
       conceptText = `To solve for the current state, we don't need to recalculate from scratch. The optimal solution is built purely from the optimal solutions of its immediate subproblems.`;
     }
   } else if (operationType?.toString().startsWith('backtrack')) {
-    conceptTitle = 'Reconstruction Path';
-    conceptText = `The DP table stores the optimal cost. To find the actual sequence of decisions, we trace the path of choices backwards from the final cell.`;
+    if (algorithm === 'mcm') {
+      conceptTitle = 'Parenthesization Tree';
+      conceptText = `The tree represents recursive grouping of matrix multiplications. Each chosen split partitions the chain into optimal left and right subchains.`;
+    } else {
+      conceptTitle = 'Reconstruction Path';
+      conceptText = `The DP table stores the optimal cost. To find the actual sequence of decisions, we trace the path of choices backwards from the final cell.`;
+    }
   } else if (['edit_replace', 'edit_delete', 'edit_insert'].includes(operationType?.toString() ?? '') && variables.transformedStr !== undefined) {
     conceptTitle = 'Sequence Transformation';
     conceptText = `We are now applying the reconstructed operations in forward chronological order to visually transform the source string into the target string.`;

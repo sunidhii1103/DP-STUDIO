@@ -1,5 +1,6 @@
 import React from 'react';
 import { DPTable } from '../viz/DPTable';
+import { MCMParenthesizationTree } from '../viz/MCMParenthesizationTree';
 import { ComplexityPanel } from './ComplexityPanel';
 import { LearningPanel } from './LearningPanel';
 import type { Step, TableSnapshot1D } from '../../types/step.types';
@@ -61,6 +62,7 @@ export const VisualPanel: React.FC<VisualPanelProps> = ({
           snapshot={step.tableSnapshot as TableSnapshot1D} 
           activeIndices={step.activeIndices} 
         />
+        {isMCM && <MCMParenthesizationTree step={step} />}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', fontSize: '0.85rem', color: 'var(--color-text-secondary)', flexWrap: 'wrap', justifyContent: 'center' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: 12, height: 12, borderRadius: 2, background: 'linear-gradient(135deg, #facc15, #f59e0b)' }}></span> Current cell</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: 12, height: 12, borderRadius: 2, background: 'rgba(59, 130, 246, 0.15)', border: '1px dashed #60a5fa' }}></span> Dependency</span>
