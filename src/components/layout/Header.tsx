@@ -40,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
             : `LCS (${lcsS1}, ${lcsS2})`;
 
   return (
-    <header style={{
+    <header className="app-header" style={{
       width: '100%',
       padding: '0.75rem 1.5rem',
       backgroundColor: 'var(--color-bg-secondary)',
@@ -54,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
       gap: '1rem',
       flexWrap: 'wrap'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div className="app-header-title" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <div className="logo" style={{ cursor: 'pointer' }} onClick={() => window.location.href = '/'}>
           <img src="/logo.png" alt="DP Studio" style={{ width: '32px', height: '32px', borderRadius: '4px' }} />
           <span style={{ fontSize: '1.25rem', color: 'var(--color-text-primary)' }}>DP Studio</span>
@@ -63,8 +63,8 @@ export const Header: React.FC<HeaderProps> = ({
         <span style={{ color: 'var(--color-text-muted)', fontWeight: 'bold' }}>{title}</span>
       </div>
       
-      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      <div className="app-header-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="app-header-inputs" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <select 
             value={algo} 
             onChange={(e) => setAlgo(e.target.value as AlgorithmId)}
@@ -229,9 +229,8 @@ export const Header: React.FC<HeaderProps> = ({
             Single
           </button>
           <button 
-            disabled={algo === 'lis'}
-            title={algo === 'lis' ? 'LIS compare mode is reserved for a future O(n^2) vs O(n log n) view.' : undefined}
-            onClick={() => { if (mode !== 'comparison' && algo !== 'lis') toggleMode() }}
+            title={algo === 'lis' ? 'Compare brute force recursion, O(n^2) DP, and O(n log n) tails.' : undefined}
+            onClick={() => { if (mode !== 'comparison') toggleMode() }}
             style={{
               padding: '0.4rem 1rem',
               backgroundColor: mode === 'comparison' ? 'var(--color-accent-primary)' : 'transparent',

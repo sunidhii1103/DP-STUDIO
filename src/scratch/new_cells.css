@@ -1,0 +1,112 @@
+/* ── DP Cell State Transitions ────────────────────────────────────────────── */
+.dp-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  border: 1.5px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--color-cell-idle);
+  color: var(--color-text-muted);
+  transition: all var(--transition-cell);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.dp-cell.active {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-cell-active);
+  color: var(--color-cell-active);
+  transform: scale(1.1) translateY(-4px);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 20px var(--color-cell-active-glow);
+  z-index: var(--z-elevated);
+  font-weight: 800;
+}
+
+.dp-cell.dependency {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: var(--color-cell-dependency);
+  color: var(--color-cell-dependency);
+  border-style: dashed;
+  box-shadow: 0 0 15px var(--color-cell-dependency-glow);
+}
+
+.dp-cell--computed {
+  background: rgba(16, 185, 129, 0.05);
+  border-color: var(--color-cell-computed);
+  color: #10b981;
+}
+
+.dp-cell--result {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+  border-color: var(--color-cell-computed);
+  color: #10b981;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.2);
+  transform: scale(1.05);
+  font-weight: 900;
+  border-width: 2px;
+}
+
+.dp-cell--path {
+  background: rgba(168, 85, 247, 0.1);
+  border-color: #a855f7;
+  color: #c084fc;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+  animation: pulsePath 2s infinite;
+}
+
+@keyframes pulsePath {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.02); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.dp-cell.changed {
+  animation: flashChange 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes flashChange {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.15); filter: brightness(1.5); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.dp-cell.interval-cell {
+  min-width: 62px;
+  width: 62px;
+  height: 54px;
+  font-size: 0.8rem;
+}
+
+.dp-cell.interval-cell--empty {
+  opacity: 0.15;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dp-cell.interval-cell--active-diagonal {
+  border-color: var(--color-accent-secondary);
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+  animation: diagonalPulse 2s infinite;
+}
+
+@keyframes diagonalPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.interval-split-pill {
+  font-size: 0.6rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  color: var(--color-accent-secondary);
+  font-weight: 800;
+}

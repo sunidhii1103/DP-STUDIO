@@ -13,12 +13,30 @@ import { CodePanel } from '../components/panels/CodePanel';
 import { ComparisonPanel } from '../components/panels/ComparisonPanel';
 import { MCMCompareView } from '../components/compare/mcm/MCMCompareView';
 import { createMCMCompareTimeline } from '../components/compare/mcm/mcmCompareData';
+import { LISCompareView } from '../components/compare/lis/LISCompareView';
+import { createLISCompareTimeline } from '../components/compare/lis/lisCompareData';
 
 import { usePlayback } from '../hooks/usePlayback';
+import type { Speed } from '../hooks/usePlayback';
 import type { AlgorithmId, Step } from '../types/step.types';
 
 type Mode = 'single' | 'comparison';
 type AlgorithmSelection = AlgorithmId;
+
+const readStoredValue = (key: string) => {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(key);
+};
+
+const readStoredAlgorithm = (): AlgorithmSelection => {
+  const stored = readStoredValue('dpstudio:lastAlgorithm') as AlgorithmSelection | null;
+  return stored && ['fibonacci', 'knapsack', 'lcs', 'edit-distance', 'mcm', 'lis'].includes(stored) ? stored : 'fibonacci';
+};
+
+const readStoredSpeed = (): Speed => {
+  const stored = readStoredValue('dpstudio:preferredSpeed') as Speed | null;
+  return stored && ['Slow', 'Medium', 'Fast'].includes(stored) ? stored : 'Medium';
+};
 
 const safeText = (value: unknown, fallback = '-'): string => {
   if (value === null || value === undefined || value === '') return fallback;
@@ -101,8 +119,8 @@ function parseLISArray(raw: string): { nums: number[]; error: string | null } {
 
 export const VisualizerPage: React.FC = () => {
   const [mode, setMode] = useState<Mode>('single');
-  const [learningMode, setLearningMode] = useState(false);
-  const [algo, setAlgo] = useState<AlgorithmSelection>('fibonacci');
+  const [learningMode, setLearningMode] = useState(() => readStoredValue('dpstudio:learningMode') === 'true');
+  const [algo, setAlgo] = useState<AlgorithmSelection>(() => readStoredAlgorithm());
   const [fibN, setFibN] = useState(5);
   const [knapCapacity, setKnapCapacity] = useState(5);
   const [lcsS1, setLcsS1] = useState('ABCBDAB');
@@ -151,13 +169,20 @@ export const VisualizerPage: React.FC = () => {
     return createMCMCompareTimeline(parsedMCM.dimensions, tabulationSteps);
   }, [algo, parsedMCM, tabulationSteps]);
 
-  const effectiveMode = algo === 'lis' ? 'single' : mode;
+  const lisCompareTimeline = React.useMemo(() => {
+    if (algo !== 'lis' || parsedLIS.error) return null;
+    return createLISCompareTimeline(parsedLIS.nums, tabulationSteps);
+  }, [algo, parsedLIS, tabulationSteps]);
+
+  const effectiveMode = mode;
 
   const totalSteps = effectiveMode === 'single'
     ? tabulationSteps.length
     : algo === 'mcm'
       ? (mcmCompareTimeline?.frames.length ?? 0)
-      : Math.max(tabulationSteps.length, memoizationSteps.length);
+      : algo === 'lis'
+        ? (lisCompareTimeline?.frames.length ?? 0)
+        : Math.max(tabulationSteps.length, memoizationSteps.length);
 
   const {
     currentStepIndex,
@@ -172,11 +197,50 @@ export const VisualizerPage: React.FC = () => {
   } = usePlayback(totalSteps);
 
   useEffect(() => {
+    setSpeed(readStoredSpeed());
+  }, [setSpeed]);
+
+  useEffect(() => {
+    window.localStorage.setItem('dpstudio:lastAlgorithm', algo);
+  }, [algo]);
+
+  useEffect(() => {
+    window.localStorage.setItem('dpstudio:learningMode', String(learningMode));
+  }, [learningMode]);
+
+  useEffect(() => {
+    window.localStorage.setItem('dpstudio:preferredSpeed', speed);
+  }, [speed]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+      if (event.code === 'Space') {
+        event.preventDefault();
+        if (isPlaying) pause();
+        else play();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        handleNext();
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        handlePrev();
+      } else if (algo === 'lis' && mode === 'comparison' && (event.key === '+' || event.key === '=')) {
+        event.preventDefault();
+        window.dispatchEvent(new CustomEvent('lis-tree-zoom', { detail: { direction: 'in' } }));
+      } else if (algo === 'lis' && mode === 'comparison' && event.key === '-') {
+        event.preventDefault();
+        window.dispatchEvent(new CustomEvent('lis-tree-zoom', { detail: { direction: 'out' } }));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [algo, mode, isPlaying, pause, play, handleNext, handlePrev]);
+
+  useEffect(() => {
     setCurrentStepIndex(0);
     pause();
-    if (algo === 'lis' && mode === 'comparison') {
-      setMode('single');
-    }
   }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, mcmDimensions, lisArray, mode, setCurrentStepIndex, pause]);
 
   const toggleMode = () => {
@@ -545,6 +609,14 @@ export const VisualizerPage: React.FC = () => {
             timeline={mcmCompareTimeline}
             currentStepIndex={currentStepIndex}
             speed={speed}
+          />
+        ) : algo === 'lis' && lisCompareTimeline ? (
+          <LISCompareView
+            timeline={lisCompareTimeline}
+            currentStepIndex={currentStepIndex}
+            speed={speed}
+            learningMode={learningMode}
+            pause={pause}
           />
         ) : (
           <div style={{ padding: '0.5rem', height: '100%', overflow: 'hidden' }}>

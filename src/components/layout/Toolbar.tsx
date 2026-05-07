@@ -17,7 +17,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   isPlaying, play, pause, handlePrev, handleNext, speed, setSpeed, currentStepIndex, totalSteps
 }) => {
   return (
-    <div style={{
+    <div className="app-playback-toolbar" style={{
       width: '100%',
       padding: '0.75rem 1.5rem',
       backgroundColor: 'var(--color-bg-elevated)',

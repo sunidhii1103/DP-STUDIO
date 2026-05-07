@@ -13,55 +13,65 @@ export function usePlayback(totalSteps: number) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState<Speed>('Medium');
   const timerRef = useRef<number | null>(null);
+  const totalStepsRef = useRef(totalSteps);
+  const speedRef = useRef(speed);
 
-  const pause = useCallback(() => {
-    setIsPlaying(false);
+  useEffect(() => {
+    totalStepsRef.current = totalSteps;
+  }, [totalSteps]);
+
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
+
+  const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
       window.clearInterval(timerRef.current);
       timerRef.current = null;
     }
   }, []);
 
+  const pause = useCallback(() => {
+    setIsPlaying(false);
+    clearTimer();
+  }, [clearTimer]);
+
   const play = useCallback(() => {
-    if (totalSteps === 0) return;
-    
-    if (currentStepIndex >= totalSteps - 1) {
-      setCurrentStepIndex(0);
-    }
+    if (totalStepsRef.current <= 0) return;
+    setCurrentStepIndex((current) => current >= totalStepsRef.current - 1 ? 0 : current);
     setIsPlaying(true);
-  }, [currentStepIndex, totalSteps]);
+  }, []);
 
   useEffect(() => {
-    if (!isPlaying || totalSteps === 0) {
-      return;
+    clearTimer();
+
+    if (!isPlaying || totalStepsRef.current <= 0) {
+      return undefined;
     }
 
     timerRef.current = window.setInterval(() => {
-      setCurrentStepIndex((prev) => {
-        if (prev >= totalSteps - 1) {
-          pause();
-          return prev;
+      setCurrentStepIndex((current) => {
+        const lastStep = Math.max(0, totalStepsRef.current - 1);
+        if (current >= lastStep) {
+          setIsPlaying(false);
+          clearTimer();
+          return current;
         }
-        return prev + 1;
+        return current + 1;
       });
-    }, SPEED_MS[speed]);
+    }, SPEED_MS[speedRef.current]);
 
-    return () => {
-      if (timerRef.current !== null) {
-        window.clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [isPlaying, speed, totalSteps, pause]);
+    return clearTimer;
+  }, [isPlaying, speed, clearTimer]);
 
   const handleNext = useCallback(() => {
-    pause(); 
-    setCurrentStepIndex((prev) => Math.min(prev + 1, totalSteps - 1));
-  }, [pause, totalSteps]);
+    pause();
+    setCurrentStepIndex((current) => Math.min(current + 1, Math.max(0, totalStepsRef.current - 1)));
+  }, [pause]);
 
   const handlePrev = useCallback(() => {
-    pause(); 
-    setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
+    pause();
+    setCurrentStepIndex((current) => Math.max(current - 1, 0));
   }, [pause]);
 
   return {
