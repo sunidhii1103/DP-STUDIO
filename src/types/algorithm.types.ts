@@ -44,8 +44,13 @@ export interface MCMInput {
   dimensions: number[];
 }
 
+export interface LISInput {
+  /** Numeric sequence for Longest Increasing Subsequence, max length: 16 */
+  nums: number[];
+}
+
 /** Union of all possible algorithm inputs */
-export type AlgorithmInput = FibonacciInput | KnapsackInput | LCSInput | EditDistanceInput | MCMInput;
+export type AlgorithmInput = FibonacciInput | KnapsackInput | LCSInput | EditDistanceInput | MCMInput | LISInput;
 
 /* ── Validation ───────────────────────────────────────────────────────────── */
 

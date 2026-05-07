@@ -140,6 +140,29 @@ const MCM_TABULATION_CODE = algorithmRegistry.mcm.tabulation?.getCode?.() ?? [
   "}"
 ];
 
+const LIS_TABULATION_CODE = algorithmRegistry.lis.tabulation?.getCode?.() ?? [
+  "function lis(nums) {",
+  "  const n = nums.length;",
+  "  const dp = Array(n).fill(1);",
+  "  const parent = Array(n).fill(-1);",
+  "  for (let i = 0; i < n; i++) {",
+  "    for (let j = 0; j < i; j++) {",
+  "      if (nums[j] < nums[i] && dp[j] + 1 > dp[i]) {",
+  "        dp[i] = dp[j] + 1;",
+  "        parent[i] = j;",
+  "      }",
+  "    }",
+  "  }",
+  "  let best = dp.indexOf(Math.max(...dp));",
+  "  const sequence = [];",
+  "  while (best !== -1) {",
+  "    sequence.push(nums[best]);",
+  "    best = parent[best];",
+  "  }",
+  "  return sequence.reverse();",
+  "}"
+];
+
 export const uiRegistry = {
   fibonacci: {
     generateSteps: (input: any) => ({
@@ -188,6 +211,16 @@ export const uiRegistry = {
     }),
     code: {
       tabulation: MCM_TABULATION_CODE,
+      memoization: []
+    }
+  },
+  lis: {
+    generateSteps: (input: any) => ({
+      tabulation: algorithmRegistry.lis.tabulation!.generateSteps(input),
+      memoization: []
+    }),
+    code: {
+      tabulation: LIS_TABULATION_CODE,
       memoization: []
     }
   }

@@ -18,6 +18,7 @@ export type {
   KnapsackInput,
   LCSInput,
   MCMInput,
+  LISInput,
 } from '../types/algorithm.types';
 
 export type {

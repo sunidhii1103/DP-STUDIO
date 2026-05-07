@@ -17,6 +17,7 @@ import { lcsApproaches } from './lcs';
 
 import { editDistanceApproaches } from './edit-distance';
 import { mcmApproaches } from './mcm';
+import { lisApproaches } from './lis';
 
 export const algorithmRegistry: AlgorithmRegistry = {
   fibonacci: fibonacciApproaches,
@@ -24,4 +25,5 @@ export const algorithmRegistry: AlgorithmRegistry = {
   lcs: lcsApproaches,
   'edit-distance': editDistanceApproaches,
   mcm: mcmApproaches,
+  lis: lisApproaches,
 };

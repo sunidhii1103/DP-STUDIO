@@ -9,12 +9,15 @@ interface HeaderProps {
   lcsS2: string;
   mcmDimensions: string;
   mcmValidationError?: string | null;
+  lisArray: string;
+  lisValidationError?: string | null;
   setAlgo: (v: AlgorithmId) => void;
   setFibN: (v: number) => void;
   setKnapCapacity: (v: number) => void;
   setLcsS1: (v: string) => void;
   setLcsS2: (v: string) => void;
   setMcmDimensions: (v: string) => void;
+  setLisArray: (v: string) => void;
   mode: 'single' | 'comparison';
   toggleMode: () => void;
   learningMode: boolean;
@@ -22,7 +25,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  algo, fibN, knapCapacity, lcsS1, lcsS2, mcmDimensions, mcmValidationError, setAlgo, setFibN, setKnapCapacity, setLcsS1, setLcsS2, setMcmDimensions, mode, toggleMode, learningMode, setLearningMode
+  algo, fibN, knapCapacity, lcsS1, lcsS2, mcmDimensions, mcmValidationError, lisArray, lisValidationError, setAlgo, setFibN, setKnapCapacity, setLcsS1, setLcsS2, setMcmDimensions, setLisArray, mode, toggleMode, learningMode, setLearningMode
 }) => {
   const title = algo === 'fibonacci'
     ? `Fibonacci (n = ${fibN})`
@@ -32,7 +35,9 @@ export const Header: React.FC<HeaderProps> = ({
         ? `Edit Distance (${lcsS1}, ${lcsS2})`
         : algo === 'mcm'
           ? `MCM (${mcmDimensions})`
-          : `LCS (${lcsS1}, ${lcsS2})`;
+          : algo === 'lis'
+            ? `LIS (${lisArray})`
+            : `LCS (${lcsS1}, ${lcsS2})`;
 
   return (
     <header style={{
@@ -78,6 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
             <option value="lcs">LCS</option>
             <option value="edit-distance">Edit Distance</option>
             <option value="mcm">Matrix Chain Multiplication</option>
+            <option value="lis">Longest Increasing Subsequence</option>
           </select>
           
           {algo === 'fibonacci' && (
@@ -174,6 +180,32 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           )}
+
+          {algo === 'lis' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <input
+                type="text"
+                value={lisArray}
+                onChange={(e) => setLisArray(e.target.value)}
+                placeholder="10,9,2,5,3,7,101,18"
+                aria-invalid={!!lisValidationError}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '9999px',
+                  width: '240px',
+                  backgroundColor: 'var(--color-bg-tertiary)',
+                  color: 'var(--color-text-primary)',
+                  border: `1px solid ${lisValidationError ? 'var(--color-error)' : 'var(--color-border-subtle)'}`,
+                  outline: 'none',
+                }}
+              />
+              {lisValidationError && (
+                <span style={{ color: 'var(--color-error)', fontSize: '0.72rem', maxWidth: '260px' }}>
+                  {lisValidationError}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <div style={{ 
@@ -197,7 +229,9 @@ export const Header: React.FC<HeaderProps> = ({
             Single
           </button>
           <button 
-            onClick={() => { if (mode !== 'comparison') toggleMode() }}
+            disabled={algo === 'lis'}
+            title={algo === 'lis' ? 'LIS compare mode is reserved for a future O(n^2) vs O(n log n) view.' : undefined}
+            onClick={() => { if (mode !== 'comparison' && algo !== 'lis') toggleMode() }}
             style={{
               padding: '0.4rem 1rem',
               backgroundColor: mode === 'comparison' ? 'var(--color-accent-primary)' : 'transparent',

@@ -9,7 +9,7 @@
 /* ── Core Enums / Unions ──────────────────────────────────────────────────── */
 
 /** Supported algorithm identifiers */
-export type AlgorithmId = 'fibonacci' | 'knapsack' | 'lcs' | 'edit-distance' | 'mcm';
+export type AlgorithmId = 'fibonacci' | 'knapsack' | 'lcs' | 'edit-distance' | 'mcm' | 'lis';
 
 /** Supported approach strategies */
 export type Approach = 'brute_force' | 'memoization' | 'tabulation';

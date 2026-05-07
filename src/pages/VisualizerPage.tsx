@@ -81,6 +81,24 @@ function parseMCMDimensions(raw: string): { dimensions: number[]; error: string 
   return { dimensions, error: null };
 }
 
+function parseLISArray(raw: string): { nums: number[]; error: string | null } {
+  const tokens = raw.split(',').map(token => token.trim());
+  if (raw.trim().length === 0 || tokens.length === 0) {
+    return { nums: [], error: 'Enter a comma-separated integer array.' };
+  }
+  if (tokens.some(token => token.length === 0)) {
+    return { nums: [], error: 'Use comma-separated integers only.' };
+  }
+  if (tokens.some(token => !/^-?\d+$/.test(token))) {
+    return { nums: [], error: 'LIS values must be integers. Negatives are allowed.' };
+  }
+  const nums = tokens.map(Number);
+  if (nums.length > 16) {
+    return { nums: [], error: 'Use at most 16 numbers for readability.' };
+  }
+  return { nums, error: null };
+}
+
 export const VisualizerPage: React.FC = () => {
   const [mode, setMode] = useState<Mode>('single');
   const [learningMode, setLearningMode] = useState(false);
@@ -90,6 +108,7 @@ export const VisualizerPage: React.FC = () => {
   const [lcsS1, setLcsS1] = useState('ABCBDAB');
   const [lcsS2, setLcsS2] = useState('BDCAB');
   const [mcmDimensions, setMcmDimensions] = useState('10,30,5,60');
+  const [lisArray, setLisArray] = useState('10,9,2,5,3,7,101,18');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [knapItems, _setKnapItems] = useState([
     { weight: 2, value: 3, label: 'A' },
@@ -98,6 +117,7 @@ export const VisualizerPage: React.FC = () => {
   ]);
 
   const parsedMCM = React.useMemo(() => parseMCMDimensions(mcmDimensions), [mcmDimensions]);
+  const parsedLIS = React.useMemo(() => parseLISArray(lisArray), [lisArray]);
 
   const { tabulationSteps, memoizationSteps } = React.useMemo(() => {
     if (!uiRegistry || !uiRegistry[algo]) return { tabulationSteps: [], memoizationSteps: [] };
@@ -108,6 +128,10 @@ export const VisualizerPage: React.FC = () => {
       else if (algo === 'mcm') {
         if (parsedMCM.error) return { tabulationSteps: [], memoizationSteps: [] };
         inputConfig = { dimensions: parsedMCM.dimensions };
+      }
+      else if (algo === 'lis') {
+        if (parsedLIS.error) return { tabulationSteps: [], memoizationSteps: [] };
+        inputConfig = { nums: parsedLIS.nums };
       }
       else inputConfig = { s1: lcsS1, s2: lcsS2 };
 
@@ -120,14 +144,16 @@ export const VisualizerPage: React.FC = () => {
       console.error("Failed to generate steps:", e);
       return { tabulationSteps: [], memoizationSteps: [] };
     }
-  }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, parsedMCM]);
+  }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, parsedMCM, parsedLIS]);
 
   const mcmCompareTimeline = React.useMemo(() => {
     if (algo !== 'mcm' || parsedMCM.error) return null;
     return createMCMCompareTimeline(parsedMCM.dimensions, tabulationSteps);
   }, [algo, parsedMCM, tabulationSteps]);
 
-  const totalSteps = mode === 'single'
+  const effectiveMode = algo === 'lis' ? 'single' : mode;
+
+  const totalSteps = effectiveMode === 'single'
     ? tabulationSteps.length
     : algo === 'mcm'
       ? (mcmCompareTimeline?.frames.length ?? 0)
@@ -148,7 +174,10 @@ export const VisualizerPage: React.FC = () => {
   useEffect(() => {
     setCurrentStepIndex(0);
     pause();
-  }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, mcmDimensions, setCurrentStepIndex, pause]);
+    if (algo === 'lis' && mode === 'comparison') {
+      setMode('single');
+    }
+  }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, mcmDimensions, lisArray, mode, setCurrentStepIndex, pause]);
 
   const toggleMode = () => {
     pause();
@@ -197,6 +226,35 @@ export const VisualizerPage: React.FC = () => {
       }
       if (operationType === 'result') {
         return <p style={{ fontSize: '1.1rem', margin: 0 }}>Minimum scalar multiplication cost: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px', color: 'var(--color-success)' }}>{safeText(variables.result)}</code><br /><span style={{ color: 'var(--color-text-secondary)' }}>Optimal parenthesization: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>{safeText(variables.parenthesization, 'not available')}</code></span></p>;
+      }
+      return null;
+    }
+
+    if (step.algorithm === 'lis') {
+      if (operationType === 'initialize') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Initialize <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>dp[{safeText(variables.i)}] = 1</code>. A single value, <strong>{safeText(variables.value)}</strong>, is already an increasing subsequence of length 1.</p>;
+      }
+      if (operationType === 'read') {
+        if (step.metadata?.phase === 'reconstruction') {
+          return (
+            <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-info)' }}>
+              <strong>Backtracking Reconstruction Phase:</strong> {safeText(variables.desc, 'Follow predecessor pointers.')}
+              <br />
+              <span style={{ color: 'var(--color-text-secondary)' }}>Subsequence so far: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>[{safeText(variables.partialSequence, '')}]</code></span>
+            </p>
+          );
+        }
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Focus index <strong>{safeText(variables.i)}</strong> with value <strong>{safeText(variables.value)}</strong>. We scan earlier values as possible predecessors.</p>;
+      }
+      if (operationType === 'compare') {
+        const canExtend = Number(variables.canExtend) === 1;
+        return <p style={{ fontSize: '1.1rem', margin: 0, color: canExtend ? 'var(--color-success)' : 'var(--color-warning)' }}>{safeText(variables.desc)}<br /><span style={{ color: 'var(--color-text-secondary)' }}>Candidate transition: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>dp[{safeText(variables.j)}] + 1 = {Number(variables.candidateDp) + 1}</code></span></p>;
+      }
+      if (operationType === 'compute') {
+        return <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-success)' }}>Updating <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>dp[{safeText(variables.i)}]</code> from <strong>{safeText(variables.previous)}</strong> to <strong>{safeText(variables.result)}</strong> and setting <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>parent[{safeText(variables.i)}] = {safeText(variables.parentIndex)}</code>.</p>;
+      }
+      if (operationType === 'result') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Final LIS length: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px', color: 'var(--color-success)' }}>{safeText(variables.result)}</code><br /><span style={{ color: 'var(--color-text-secondary)' }}>Actual subsequence: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>[{safeText(variables.sequence)}]</code></span></p>;
       }
       return null;
     }
@@ -387,7 +445,8 @@ export const VisualizerPage: React.FC = () => {
     return null;
   };
 
-  if (algo === 'mcm' && parsedMCM.error) {
+  if ((algo === 'mcm' && parsedMCM.error) || (algo === 'lis' && parsedLIS.error)) {
+    const validationError = algo === 'mcm' ? parsedMCM.error : parsedLIS.error;
     return (
       <MainLayout>
         <Header 
@@ -398,18 +457,21 @@ export const VisualizerPage: React.FC = () => {
           lcsS2={lcsS2}
           mcmDimensions={mcmDimensions}
           mcmValidationError={parsedMCM.error}
+          lisArray={lisArray}
+          lisValidationError={parsedLIS.error}
           setAlgo={setAlgo}
           setFibN={setFibN}
           setKnapCapacity={setKnapCapacity}
           setLcsS1={setLcsS1}
           setLcsS2={setLcsS2}
           setMcmDimensions={setMcmDimensions}
-          mode={mode}
+          setLisArray={setLisArray}
+          mode={effectiveMode}
           toggleMode={toggleMode}
           learningMode={learningMode}
           setLearningMode={setLearningMode}
         />
-        <div style={{ padding: '2rem', color: 'var(--color-text-primary)' }}>{parsedMCM.error}</div>
+        <div style={{ padding: '2rem', color: 'var(--color-text-primary)' }}>{validationError}</div>
       </MainLayout>
     );
   }
@@ -434,13 +496,16 @@ export const VisualizerPage: React.FC = () => {
         lcsS2={lcsS2}
         mcmDimensions={mcmDimensions}
         mcmValidationError={algo === 'mcm' ? parsedMCM.error : null}
+        lisArray={lisArray}
+        lisValidationError={algo === 'lis' ? parsedLIS.error : null}
         setAlgo={setAlgo}
         setFibN={setFibN}
         setKnapCapacity={setKnapCapacity}
         setLcsS1={setLcsS1}
         setLcsS2={setLcsS2}
         setMcmDimensions={setMcmDimensions}
-        mode={mode}
+        setLisArray={setLisArray}
+        mode={effectiveMode}
         toggleMode={toggleMode}
         learningMode={learningMode}
         setLearningMode={setLearningMode}
@@ -459,7 +524,7 @@ export const VisualizerPage: React.FC = () => {
       />
       
       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
-        {mode === 'single' ? (
+        {effectiveMode === 'single' ? (
           <ResizableLayout
             leftPanel={
               <VisualPanel 

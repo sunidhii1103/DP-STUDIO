@@ -1,0 +1,217 @@
+.lis-visual {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(45, 212, 191, 0.18);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.lis-visual-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.lis-kicker {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.lis-visual-header strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--color-text-primary);
+}
+
+.lis-summary-pill {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  background: rgba(6, 78, 59, 0.36);
+  color: #86efac;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.lis-array-row {
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.1rem 0.7rem;
+}
+
+.lis-array-card {
+  position: relative;
+  min-width: 92px;
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.7rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(30, 41, 59, 0.88);
+  color: var(--color-text-primary);
+  text-align: center;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.lis-array-card::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -0.65rem;
+  width: 0.65rem;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.32);
+}
+
+.lis-array-card:last-child::after {
+  display: none;
+}
+
+.lis-array-card strong {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.lis-array-card small,
+.lis-array-card em,
+.lis-index {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.lis-array-card--current {
+  z-index: 2;
+  transform: translateY(-2px);
+  border-color: #facc15;
+  box-shadow: 0 0 22px rgba(250, 204, 21, 0.28);
+}
+
+.lis-array-card--candidate {
+  border-color: rgba(96, 165, 250, 0.8);
+  background: rgba(30, 64, 175, 0.32);
+  box-shadow: 0 0 16px rgba(96, 165, 250, 0.22);
+}
+
+.lis-array-card--parent {
+  border-color: rgba(45, 212, 191, 0.88);
+  background: rgba(13, 148, 136, 0.24);
+}
+
+.lis-array-card--path {
+  border-color: rgba(34, 197, 94, 0.9);
+  background: rgba(6, 78, 59, 0.42);
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.24);
+}
+
+.lis-parent-map {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.lis-parent-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  background: rgba(13, 148, 136, 0.14);
+  color: #99f6e4;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.lis-parent-link b {
+  color: #facc15;
+}
+
+.lis-parent-link--muted {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text-muted);
+}
+
+.lis-reconstruction-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: rgba(6, 78, 59, 0.2);
+}
+
+.lis-reconstruction-strip span {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.lis-reconstruction-strip strong {
+  color: #bbf7d0;
+  overflow-wrap: anywhere;
+}
+
+.lis-legend {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+}
+
+.lis-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.lis-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.lis-dot--current {
+  background: #facc15;
+}
+
+.lis-dot--candidate {
+  background: #60a5fa;
+}
+
+.lis-dot--parent {
+  background: #2dd4bf;
+}
+
+.lis-dot--path {
+  background: #22c55e;
+}
+
+@media (max-width: 720px) {
+  .lis-array-card {
+    min-width: 78px;
+  }
+
+  .lis-reconstruction-strip {
+    flex-direction: column;
+  }
+}

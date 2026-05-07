@@ -203,6 +203,43 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
         actionText = `Operation: ${operationType} at state [${i}][${j}].`;
         reasonText = `Progressing the Edit Distance matrix.`;
     }
+  } else if (algorithm === 'lis') {
+    const { i, j, current, candidate, previous, result, parentIndex, value } = variables;
+
+    switch (operationType) {
+      case 'initialize':
+        actionText = `Initialize dp[${safeText(i)}] = 1 for value ${safeText(value)}.`;
+        reasonText = `Every single element is an increasing subsequence of length 1, so this is the base state for each index.`;
+        break;
+      case 'read':
+        if (step.metadata?.phase === 'reconstruction') {
+          actionText = `Reconstruct LIS by visiting index ${safeText(i)} with value ${safeText(value)}.`;
+          reasonText = parentIndex === -1
+            ? `This index has no predecessor, so it starts the subsequence.`
+            : `The parent array points to index ${safeText(parentIndex)}, which was the predecessor that produced this optimal length.`;
+        } else {
+          actionText = `Focus nums[${safeText(i)}] = ${safeText(value)}.`;
+          reasonText = `dp[${safeText(i)}] must mean the best increasing subsequence ending exactly at this index, so we inspect earlier indices.`;
+        }
+        break;
+      case 'compare':
+        actionText = `Compare candidate nums[${safeText(j)}] = ${safeText(candidate)} with current nums[${safeText(i)}] = ${safeText(current)}.`;
+        reasonText = Number(variables.canExtend) === 1
+          ? `${safeText(current)} can extend a subsequence ending at ${safeText(candidate)} because it is larger and appears later.`
+          : `${safeText(current)} cannot extend ${safeText(candidate)} because an increasing subsequence needs the next value to be larger.`;
+        break;
+      case 'compute':
+        actionText = `Update dp[${safeText(i)}] from ${safeText(previous)} to ${safeText(result)}.`;
+        reasonText = `We found a better predecessor at index ${safeText(parentIndex)}, so parent[${safeText(i)}] records how to reconstruct this chain later.`;
+        break;
+      case 'result':
+        actionText = `Final LIS is [${safeText(variables.sequence)}] with length ${safeText(result)}.`;
+        reasonText = `The length came from the dp array; the actual subsequence came from following parent pointers backward and reversing the path.`;
+        break;
+      default:
+        actionText = `Operation: ${operationType} at LIS index ${safeText(i)}.`;
+        reasonText = `Progressing the sequence DP state.`;
+    }
   } else if (algorithm === 'mcm') {
     const { i, j, k, interval, leftInterval, rightInterval, formula, parenthesization } = variables;
 
@@ -265,6 +302,15 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
   } else if (algorithm === 'mcm' && operationType === 'chain_length') {
     conceptTitle = 'Diagonal Interval Traversal';
     conceptText = `Intervals are solved diagonally because every longer chain depends on shorter chains that must already be available.`;
+  } else if (algorithm === 'lis' && operationType === 'compare') {
+    conceptTitle = 'Subsequence Order';
+    conceptText = `A subsequence may skip elements, but it cannot reorder them. We only look left of i, and we only extend from smaller values.`;
+  } else if (algorithm === 'lis' && operationType === 'compute') {
+    conceptTitle = 'Predecessor Reuse';
+    conceptText = `dp[i] stores the best LIS ending specifically at i. When nums[j] can precede nums[i], dp[j] + 1 becomes a reusable candidate, and parent[i] remembers the chosen j.`;
+  } else if (algorithm === 'lis' && step.metadata?.phase === 'reconstruction') {
+    conceptTitle = 'Reconstruction Path';
+    conceptText = `The dp array gives the length. The parent array gives the actual subsequence by tracing chosen predecessors backward.`;
   } else if (operationType === 'compute' || operationType === 'match' || operationType === 'mismatch' || operationType === 'choose_top' || operationType === 'choose_left' || operationType === 'edit_match' || operationType === 'try_split' || operationType === 'calculate_cost' || operationType === 'update_min' || operationType === 'final_decision') {
     if (algorithm === 'knapsack') {
       conceptTitle = 'Decision Making (Optimal Substructure)';

@@ -1,6 +1,7 @@
 import React from 'react';
 import { DPTable } from '../viz/DPTable';
 import { MCMParenthesizationTree } from '../viz/MCMParenthesizationTree';
+import { LISSequenceView } from '../viz/LISSequenceView';
 import { ComplexityPanel } from './ComplexityPanel';
 import { LearningPanel } from './LearningPanel';
 import type { Step, TableSnapshot1D } from '../../types/step.types';
@@ -25,7 +26,8 @@ export const VisualPanel: React.FC<VisualPanelProps> = ({
   const isReconstructionPhase = 
     (step.algorithm === 'lcs' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.partialLCS !== undefined))) ||
     (step.algorithm === 'edit-distance' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.transformedStr !== undefined) || (['edit_replace', 'edit_delete', 'edit_insert'].includes(step.operation) && step.explanation?.variables?.transformedStr !== undefined))) ||
-    (step.algorithm === 'mcm' && step.operation === 'backtrack_split');
+    (step.algorithm === 'mcm' && step.operation === 'backtrack_split') ||
+    (step.algorithm === 'lis' && (step.metadata?.phase === 'reconstruction' || step.metadata?.phase === 'result'));
   const isMCM = step.algorithm === 'mcm';
   const stepVariables = step.explanation?.variables ?? {};
   const chainLengthValue = Number(stepVariables.chainLength);
@@ -58,6 +60,7 @@ export const VisualPanel: React.FC<VisualPanelProps> = ({
             </div>
           </div>
         )}
+        {step.algorithm === 'lis' && <LISSequenceView step={step} />}
         <DPTable 
           snapshot={step.tableSnapshot as TableSnapshot1D} 
           activeIndices={step.activeIndices} 
