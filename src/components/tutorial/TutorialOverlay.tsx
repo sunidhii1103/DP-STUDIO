@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import './tutorial.css';
 
 export interface TutorialStep {
@@ -23,58 +24,59 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ steps, onClose
 
   const updateTargetPosition = useCallback(() => {
     if (!isOpen || !currentStep) return;
-    const el = document.querySelector(`[data-tour="${currentStep.targetId}"]`);
+    const elements = document.querySelectorAll(`[data-tour="${currentStep.targetId}"]`);
+    let el: Element | null = null;
+    for (const element of Array.from(elements)) {
+      const rect = element.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        el = element;
+        break;
+      }
+    }
+    
     if (el) {
       const rect = el.getBoundingClientRect();
       setTargetRect(rect);
       
-      // Only scroll if element is not fully visible
       const isFullyVisible = (
-        rect.top >= 100 &&
+        rect.top >= 0 &&
         rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) - 100 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
         rect.right <= (window.innerWidth || document.documentElement.clientWidth)
       );
       
       if (!isFullyVisible) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-        // After scrolling, update rect again
-        setTimeout(() => {
-          const newRect = el.getBoundingClientRect();
-          setTargetRect(newRect);
-        }, 300);
       }
     } else {
       setTargetRect(null);
     }
   }, [isOpen, currentStep]);
 
-  // Initialize on open
   useEffect(() => {
     if (isOpen) {
       setCurrentStepIndex(0);
     }
   }, [isOpen]);
 
-  // Update position when step changes
   useEffect(() => {
-    if (isOpen) {
-      updateTargetPosition();
-    }
-  }, [currentStepIndex, isOpen, updateTargetPosition]);
-
-  useEffect(() => {
+    updateTargetPosition();
     const handleResize = () => {
       setWindowSize({ width: window.innerWidth, height: window.innerHeight });
       updateTargetPosition();
     };
     window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', updateTargetPosition, true);
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', updateTargetPosition, true);
     };
   }, [updateTargetPosition]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateTargetPosition();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [currentStepIndex, updateTargetPosition]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,7 +89,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ steps, onClose
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, currentStepIndex]);
 
-  if (!isOpen || !currentStep) return null;
+  if (!isOpen) return null;
 
   const handleNext = () => {
     if (currentStepIndex < steps.length - 1) {
@@ -108,16 +110,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ steps, onClose
   let tooltipPlacement = 'bottom';
 
   const isMobile = windowSize.width <= 768;
+  const TOOLTIP_MAX_HEIGHT = 280;
 
   if (targetRect) {
     const spaceBelow = windowSize.height - targetRect.bottom;
     const spaceAbove = targetRect.top;
     
-    if (isMobile && spaceBelow < 280 && spaceAbove < 280) {
+    // Always fallback to center if there is not enough vertical space (both desktop & mobile)
+    if (spaceBelow < TOOLTIP_MAX_HEIGHT && spaceAbove < TOOLTIP_MAX_HEIGHT) {
       tooltipPlacement = 'center';
       tooltipTop = windowSize.height / 2;
       tooltipLeft = windowSize.width / 2;
-    } else if (spaceBelow < 280 && spaceAbove > 280) {
+    } else if (spaceBelow < TOOLTIP_MAX_HEIGHT && spaceAbove > TOOLTIP_MAX_HEIGHT) {
       tooltipPlacement = 'top';
       tooltipTop = targetRect.top - 24; 
     } else {
@@ -128,9 +132,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ steps, onClose
     if (tooltipPlacement !== 'center') {
       tooltipLeft = targetRect.left + (targetRect.width / 2);
       const tooltipHalfWidth = isMobile ? (windowSize.width - 32) / 2 : 170;
+      
+      // Horizontal Clamp
       const maxLeft = windowSize.width - tooltipHalfWidth - 16;
       const minLeft = tooltipHalfWidth + 16;
       tooltipLeft = Math.max(minLeft, Math.min(maxLeft, tooltipLeft));
+
+      // Vertical Clamp safety
+      if (tooltipPlacement === 'bottom') {
+        const maxTop = windowSize.height - TOOLTIP_MAX_HEIGHT - 16;
+        tooltipTop = Math.min(tooltipTop, maxTop);
+      } else if (tooltipPlacement === 'top') {
+        const minTop = TOOLTIP_MAX_HEIGHT + 16; 
+        tooltipTop = Math.max(tooltipTop, minTop);
+      }
     }
   } else {
     tooltipTop = windowSize.height / 2;
@@ -138,7 +153,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ steps, onClose
     tooltipPlacement = 'center';
   }
 
-  return (
+  return createPortal(
     <div className="tutorial-overlay-container" ref={overlayRef}>
       <div className="tutorial-dimmer"></div>
       
@@ -213,6 +228,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ steps, onClose
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import type { Speed } from '../../hooks/usePlayback';
 
 interface ToolbarProps {
@@ -21,7 +21,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       <div className="app-playback-controls">
         <button 
           onClick={isPlaying ? pause : play}
-          className={play-btn $"{isPlaying ? 'play-btn-pause' : 'play-btn-play'}"}
+          className={`play-btn ${isPlaying ? 'play-btn-pause' : 'play-btn-play'}`}
         >
           {isPlaying ? 'Pause' : 'Play'}
         </button>
@@ -54,7 +54,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <button
               key={s}
               onClick={() => setSpeed(s)}
-              className={speed-btn $"{speed === s ? 'speed-btn-active' : ''}"}
+              className={`speed-btn ${speed === s ? 'speed-btn-active' : ''}`}
             >
               {s}
             </button>
