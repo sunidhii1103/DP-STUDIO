@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { VisualPanel } from './VisualPanel';
 import { CodePanel } from './CodePanel';
 
@@ -23,7 +23,7 @@ export const ComparisonPanel: React.FC<ComparisonPanelProps> = ({
   algo,
   renderExplanation
 }) => {
-  if (!leftStep || !rightStep) return <div>No comparison data available</div>;
+  if (!leftStep || !rightStep) return <div className="comparison-empty">No comparison data available</div>;
 
   const leftOps = leftStep.metrics.operationsCount;
   const rightOps = rightStep.metrics.operationsCount;
@@ -36,20 +36,19 @@ export const ComparisonPanel: React.FC<ComparisonPanelProps> = ({
   const leftIsBetterSpace = leftMem < rightMem;
   const rightIsBetterSpace = rightMem < leftMem;
 
-  const [codeTab, setCodeTab] = useState<'memoization' | 'tabulation'>('memoization');
-
   return (
-    <div className="comparison-container">
-      <div className="visual-comparison">
-        {/* Memoization */}
-        <div className="panel comparison-panel">
-          <h3 style={{ textAlign: 'center', margin: '0 0 1rem 0', color: 'var(--color-text-primary)' }}>Memoization (Top-Down)</h3>
-          {(algo === 'knapsack' || algo === 'lcs') && (
-            <div style={{ marginBottom: '1rem', padding: '0.5rem', backgroundColor: 'rgba(245, 158, 11, 0.05)', color: 'var(--color-text-secondary)', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.1)', fontSize: '0.8rem', textAlign: 'center' }}>
-              States may not perfectly sync step-by-step
-            </div>
-          )}
-          <div className="visual-panel">
+    <div className="comparison-container comparison-container-responsive">
+      <div className="comparison-column">
+        <div className="comparison-column-header">
+          <h3>Memoization (Top-Down)</h3>
+        </div>
+        {(algo === 'knapsack' || algo === 'lcs') && (
+          <div className="sync-warning">
+            States may not perfectly sync step-by-step
+          </div>
+        )}
+        <div className="comparison-column-content">
+          <div className="panel visual-panel responsive-visual-panel">
             <VisualPanel 
               step={leftStep} 
               learningMode={learningMode} 
@@ -58,17 +57,28 @@ export const ComparisonPanel: React.FC<ComparisonPanelProps> = ({
               isBetterSpace={leftIsBetterSpace}
             />
           </div>
-        </div>
-
-        {/* Tabulation */}
-        <div className="panel comparison-panel">
-          <h3 style={{ textAlign: 'center', margin: '0 0 1rem 0', color: 'var(--color-text-primary)' }}>Tabulation (Bottom-Up)</h3>
-          {(algo === 'knapsack' || algo === 'lcs') && (
-            <div style={{ marginBottom: '1rem', padding: '0.5rem', backgroundColor: 'rgba(245, 158, 11, 0.05)', color: 'var(--color-text-secondary)', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.1)', fontSize: '0.8rem', textAlign: 'center' }}>
-              States may not perfectly sync step-by-step
+          <div className="panel code-panel responsive-code-panel algorithm-code-panel">
+            <div className="code-panel-header">
+              <span className="code-panel-title">Memoization Code</span>
             </div>
-          )}
-          <div className="visual-panel">
+            <div className="algorithm-code-scroll" style={{ flex: 1, padding: '16px' }}>
+              <CodePanel code={leftCode} activeLine={leftStep.codeReference.lineNumber} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="comparison-column">
+        <div className="comparison-column-header">
+          <h3>Tabulation (Bottom-Up)</h3>
+        </div>
+        {(algo === 'knapsack' || algo === 'lcs') && (
+          <div className="sync-warning">
+            States may not perfectly sync step-by-step
+          </div>
+        )}
+        <div className="comparison-column-content">
+          <div className="panel visual-panel responsive-visual-panel">
             <VisualPanel 
               step={rightStep} 
               learningMode={learningMode} 
@@ -77,30 +87,14 @@ export const ComparisonPanel: React.FC<ComparisonPanelProps> = ({
               isBetterSpace={rightIsBetterSpace}
             />
           </div>
-        </div>
-      </div>
-
-      <div className="panel code-panel" style={{ display: 'flex', flexDirection: 'column', padding: 0 }}>
-        <div style={{ display: 'flex', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-          <button 
-            style={{ flex: 1, padding: '12px', background: codeTab === 'memoization' ? 'rgba(59, 130, 246, 0.15)' : 'transparent', color: codeTab === 'memoization' ? '#60a5fa' : 'var(--color-text-secondary)', borderBottom: codeTab === 'memoization' ? '2px solid #3b82f6' : '2px solid transparent' }}
-            onClick={() => setCodeTab('memoization')}
-          >
-            Memoization
-          </button>
-          <button 
-            style={{ flex: 1, padding: '12px', background: codeTab === 'tabulation' ? 'rgba(59, 130, 246, 0.15)' : 'transparent', color: codeTab === 'tabulation' ? '#60a5fa' : 'var(--color-text-secondary)', borderBottom: codeTab === 'tabulation' ? '2px solid #3b82f6' : '2px solid transparent' }}
-            onClick={() => setCodeTab('tabulation')}
-          >
-            Tabulation
-          </button>
-        </div>
-        <div style={{ flex: 1, overflow: 'auto', padding: '16px' }}>
-          {codeTab === 'memoization' ? (
-            <CodePanel code={leftCode} activeLine={leftStep.codeReference.lineNumber} />
-          ) : (
-            <CodePanel code={rightCode} activeLine={rightStep.codeReference.lineNumber} />
-          )}
+          <div className="panel code-panel responsive-code-panel algorithm-code-panel">
+            <div className="code-panel-header">
+              <span className="code-panel-title">Tabulation Code</span>
+            </div>
+            <div className="algorithm-code-scroll" style={{ flex: 1, padding: '16px' }}>
+              <CodePanel code={rightCode} activeLine={rightStep.codeReference.lineNumber} />
+            </div>
+          </div>
         </div>
       </div>
     </div>

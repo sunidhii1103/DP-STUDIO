@@ -7,7 +7,7 @@ interface CodePanelProps {
 
 export const CodePanel: React.FC<CodePanelProps> = ({ code, activeLine }) => {
   return (
-    <div style={{
+    <div className="algorithm-code-panel" style={{
       backgroundColor: '#0d1117', /* Very dark VS Code like bg */
       borderLeft: '1px solid var(--color-border)',
       height: '100%',
@@ -26,7 +26,7 @@ export const CodePanel: React.FC<CodePanelProps> = ({ code, activeLine }) => {
       }}>
         Algorithm Code
       </div>
-      <div style={{ padding: '1rem 0', overflowY: 'auto', flex: 1 }}>
+      <div className="algorithm-code-scroll" style={{ padding: '1rem 0', overflowY: 'auto', flex: 1 }}>
         {code.map((line, index) => {
           const lineNumber = index + 1;
           const isActive = lineNumber === activeLine;

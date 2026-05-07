@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInView } from '../hooks/useInView';
+import { algorithmShowcase } from '../constants/algorithmShowcase';
+import type { AlgorithmShowcaseItem } from '../constants/algorithmShowcase';
 
 interface FeatureCardProps {
   children: React.ReactNode;
@@ -30,13 +32,14 @@ const FadeInSection: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   );
 };
 
+const demoSteps = [
+  { table: [0, 1, 1, 2, 3], active: 2 },
+  { table: [0, 1, 1, 2, 3], active: 3 },
+  { table: [0, 1, 1, 2, 3], active: 4 },
+];
+
 const InteractiveDemo = () => {
   const [stepIndex, setStepIndex] = useState(0);
-  const demoSteps = [
-    { table: [0,1,1,2,3], active: 2 },
-    { table: [0,1,1,2,3], active: 3 },
-    { table: [0,1,1,2,3], active: 4 },
-  ];
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -47,8 +50,8 @@ const InteractiveDemo = () => {
 
   return (
     <div className="demo-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-      {demoSteps[stepIndex].table.map((val, idx) => (
-        <div key={idx} className={`demo-cell ${idx === demoSteps[stepIndex].active ? 'active' : ''}`}>
+      {demoSteps[stepIndex]!.table.map((val, idx) => (
+        <div key={idx} className={`demo-cell ${idx === demoSteps[stepIndex]!.active ? 'active' : ''}`}>
           {val}
         </div>
       ))}
@@ -58,11 +61,12 @@ const InteractiveDemo = () => {
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const [loaded, setLoaded] = useState(false);
+  const loaded = true;
 
-  useEffect(() => {
-    setLoaded(true);
-  }, []);
+  const launchAlgorithm = (item: AlgorithmShowcaseItem) => {
+    const params = new URLSearchParams({ algo: item.id, ...item.launchParams });
+    navigate(`/visualizer?${params.toString()}`);
+  };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', color: 'var(--color-text-primary)', position: 'relative', overflowX: 'hidden' }}>
@@ -143,18 +147,26 @@ export const LandingPage: React.FC = () => {
             <div className="container">
               <h2 style={{ fontSize: '2.5rem', textAlign: 'center', margin: '0 0 3rem 0' }}>Algorithm Showcase</h2>
               <div className="algo-grid">
-                <div className="algo-card">
-                  <h3 style={{ color: 'var(--color-accent-primary)', margin: '0 0 0.5rem 0', fontSize: '1.3rem' }}>Fibonacci</h3>
-                  <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem', lineHeight: 1.5, margin: 0 }}>Understand recursion to DP transition.</p>
-                </div>
-                <div className="algo-card">
-                  <h3 style={{ color: 'var(--color-success)', margin: '0 0 0.5rem 0', fontSize: '1.3rem' }}>0/1 Knapsack</h3>
-                  <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem', lineHeight: 1.5, margin: 0 }}>Visualize 2D state decision-making.</p>
-                </div>
-                <div className="algo-card" style={{ opacity: 0.6 }}>
-                  <h3 style={{ color: 'var(--color-text-muted)', margin: '0 0 0.5rem 0', fontSize: '1.3rem' }}>LCS (Soon)</h3>
-                  <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem', lineHeight: 1.5, margin: 0 }}>Master string matching directionality.</p>
-                </div>
+                {algorithmShowcase.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`algo-card algo-card--${item.accent}`}
+                    onClick={() => launchAlgorithm(item)}
+                    aria-label={`Open ${item.name} visualizer`}
+                  >
+                    <div className="algo-card-topline">
+                      <span className="algo-icon">{item.icon}</span>
+                      <span className="algo-complexity">{item.complexity}</span>
+                    </div>
+                    <h3>{item.name}</h3>
+                    <p>{item.tagline}</p>
+                    <div className="algo-badges">
+                      <span>{item.level}</span>
+                      <span>{item.pattern}</span>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           </section>

@@ -29,6 +29,12 @@ const readStoredValue = (key: string) => {
 };
 
 const readStoredAlgorithm = (): AlgorithmSelection => {
+  const queryAlgo = typeof window === 'undefined'
+    ? null
+    : new URLSearchParams(window.location.search).get('algo');
+  if (queryAlgo && ['fibonacci', 'knapsack', 'lcs', 'edit-distance', 'mcm', 'lis'].includes(queryAlgo)) {
+    return queryAlgo as AlgorithmSelection;
+  }
   const stored = readStoredValue('dpstudio:lastAlgorithm') as AlgorithmSelection | null;
   return stored && ['fibonacci', 'knapsack', 'lcs', 'edit-distance', 'mcm', 'lis'].includes(stored) ? stored : 'fibonacci';
 };
@@ -36,6 +42,17 @@ const readStoredAlgorithm = (): AlgorithmSelection => {
 const readStoredSpeed = (): Speed => {
   const stored = readStoredValue('dpstudio:preferredSpeed') as Speed | null;
   return stored && ['Slow', 'Medium', 'Fast'].includes(stored) ? stored : 'Medium';
+};
+
+const readQueryValue = (key: string, fallback: string) => {
+  if (typeof window === 'undefined') return fallback;
+  return new URLSearchParams(window.location.search).get(key) ?? fallback;
+};
+
+const readQueryNumber = (key: string, fallback: number) => {
+  const raw = readQueryValue(key, String(fallback));
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : fallback;
 };
 
 const safeText = (value: unknown, fallback = '-'): string => {
@@ -121,12 +138,12 @@ export const VisualizerPage: React.FC = () => {
   const [mode, setMode] = useState<Mode>('single');
   const [learningMode, setLearningMode] = useState(() => readStoredValue('dpstudio:learningMode') === 'true');
   const [algo, setAlgo] = useState<AlgorithmSelection>(() => readStoredAlgorithm());
-  const [fibN, setFibN] = useState(5);
-  const [knapCapacity, setKnapCapacity] = useState(5);
-  const [lcsS1, setLcsS1] = useState('ABCBDAB');
-  const [lcsS2, setLcsS2] = useState('BDCAB');
-  const [mcmDimensions, setMcmDimensions] = useState('10,30,5,60');
-  const [lisArray, setLisArray] = useState('10,9,2,5,3,7,101,18');
+  const [fibN, setFibN] = useState(() => readQueryNumber('n', 5));
+  const [knapCapacity, setKnapCapacity] = useState(() => readQueryNumber('capacity', 5));
+  const [lcsS1, setLcsS1] = useState(() => readQueryValue('s1', 'ABCBDAB'));
+  const [lcsS2, setLcsS2] = useState(() => readQueryValue('s2', 'BDCAB'));
+  const [mcmDimensions, setMcmDimensions] = useState(() => readQueryValue('dimensions', '10,30,5,60'));
+  const [lisArray, setLisArray] = useState(() => readQueryValue('values', '10,9,2,5,3,7,101,18'));
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [knapItems, _setKnapItems] = useState([
     { weight: 2, value: 3, label: 'A' },

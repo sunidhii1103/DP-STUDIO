@@ -386,6 +386,62 @@ button:disabled {
   align-items: stretch;
 }
 
+.comparison-container-responsive {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+.comparison-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.comparison-column-header h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.comparison-column-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sync-warning {
+  padding: 0.5rem;
+  background-color: rgba(245, 158, 11, 0.05);
+  color: var(--color-text-secondary);
+  border-radius: 4px;
+  border: 1px solid rgba(245, 158, 11, 0.1);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.code-panel-header {
+  background: var(--color-bg-tertiary);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.code-panel-title {
+  color: var(--color-text-secondary);
+  font-weight: bold;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
 /* MCM Dedicated Compare Mode */
 .mcm-compare-view {
   height: 100%;
@@ -1567,29 +1623,107 @@ body::before {
 .algo-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  gap: 1.25rem;
   width: 100%;
 }
 
-@media (max-width: 768px) {
-  .algo-grid {
-    grid-template-columns: 1fr;
-  }
+.algo-card {
+  --algo-accent: #60a5fa;
+  position: relative;
+  min-height: 230px;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--algo-accent) 18%, transparent), transparent 52%),
+    rgba(17,24,39,0.72);
+  backdrop-filter: blur(10px);
+  padding: 1.25rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
 }
 
-.algo-card {
-  background: rgba(17,24,39,0.7);
-  backdrop-filter: blur(10px);
-  padding: 18px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.05);
-  transition: all 0.25s ease;
+.algo-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 1rem 0 1rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--algo-accent), transparent);
+  opacity: 0.68;
 }
 
 .algo-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-  border-color: rgba(59,130,246,0.4);
+  transform: translateY(-6px) scale(1.015);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.5), 0 0 24px color-mix(in srgb, var(--algo-accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--algo-accent) 45%, rgba(255,255,255,0.08));
+}
+
+.algo-card:focus-visible {
+  outline: 2px solid var(--algo-accent);
+  outline-offset: 3px;
+}
+
+.algo-card--fibonacci { --algo-accent: #22d3ee; }
+.algo-card--lis { --algo-accent: #2dd4bf; }
+.algo-card--lcs { --algo-accent: #60a5fa; }
+.algo-card--edit-distance { --algo-accent: #c084fc; }
+.algo-card--mcm { --algo-accent: #f59e0b; }
+.algo-card--knapsack { --algo-accent: #34d399; }
+
+.algo-card-topline,
+.algo-badges {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.algo-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: color-mix(in srgb, var(--algo-accent) 18%, rgba(15, 23, 42, 0.92));
+  border: 1px solid color-mix(in srgb, var(--algo-accent) 35%, rgba(255,255,255,0.08));
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.algo-complexity,
+.algo-badges span {
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 850;
+  color: color-mix(in srgb, var(--algo-accent) 70%, white);
+  background: color-mix(in srgb, var(--algo-accent) 10%, rgba(255,255,255,0.04));
+  border: 1px solid color-mix(in srgb, var(--algo-accent) 22%, rgba(255,255,255,0.08));
+  padding: 0.28rem 0.58rem;
+}
+
+.algo-card h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.18rem;
+  line-height: 1.2;
+}
+
+.algo-card p {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0;
 }
 
 .compare-preview img {
@@ -1621,4 +1755,197 @@ button:hover {
 .fade-in.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.desktop-resizable-layout {
+  display: flex;
+}
+
+.responsive-stacked-layout {
+  display: none;
+}
+
+.algorithm-code-scroll {
+  overflow-x: auto;
+}
+
+.algorithm-code-scroll .code-line {
+  min-width: max-content;
+}
+
+@media (max-width: 1023px) {
+  .algo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .app-header {
+    padding: 0.75rem !important;
+    align-items: stretch !important;
+  }
+
+  .app-header-title,
+  .app-header-controls,
+  .app-header-inputs {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .app-header-title {
+    align-items: flex-start !important;
+  }
+
+  .app-header-title > span {
+    width: 100%;
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
+  }
+
+  .app-header-controls,
+  .app-header-inputs {
+    gap: 0.5rem !important;
+  }
+
+  .app-header-controls > *,
+  .app-header-inputs > *,
+  .app-header input,
+  .app-header select {
+    flex: 1 1 100%;
+    width: 100% !important;
+    min-height: 42px;
+  }
+
+  .app-header button {
+    min-height: 42px;
+    padding: 0.42rem 0.75rem !important;
+    font-size: 0.86rem;
+  }
+
+  .app-playback-toolbar {
+    position: sticky;
+    bottom: 0;
+    justify-content: center !important;
+    padding: 0.6rem !important;
+    box-shadow: 0 -14px 30px rgba(0, 0, 0, 0.24);
+  }
+
+  .app-playback-toolbar > div {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.45rem !important;
+  }
+
+  .app-playback-toolbar button {
+    min-height: 40px;
+    padding: 0.42rem 0.78rem !important;
+    font-size: 0.84rem;
+  }
+
+  .app-playback-toolbar span {
+    flex: 1 1 100%;
+    margin-left: 0 !important;
+    text-align: center;
+    font-size: 0.78rem;
+  }
+
+  .desktop-resizable-layout {
+    display: none !important;
+  }
+
+  .responsive-stacked-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+    padding: 0.75rem;
+    box-sizing: border-box;
+  }
+
+  .responsive-visual-panel,
+  .responsive-code-panel {
+    width: 100%;
+    min-width: 0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .responsive-visual-panel {
+    min-height: 420px;
+  }
+
+  .responsive-code-panel {
+    min-height: 360px;
+  }
+
+  .visual-comparison,
+  .panel-content {
+    flex-direction: column;
+  }
+
+  .visual-panel,
+  .code-panel {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .algorithm-code-panel {
+    border-left: 0 !important;
+    border-radius: 8px;
+  }
+
+  .algorithm-code-scroll {
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .algorithm-code-scroll .code-line span {
+    font-size: 0.78rem !important;
+  }
+
+  .algo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-card {
+    min-height: 190px;
+    padding: 1rem;
+  }
+
+  .hero-title {
+    font-size: 2.45rem !important;
+  }
+
+  .section {
+    padding: 56px 16px;
+  }
+
+  /* Fix for Mobile Compare Layout - Swipeable Columns */
+  .comparison-container-responsive,
+  .mcm-compare-grid,
+  .lis-compare-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 16px;
+    padding-bottom: 12px;
+  }
+
+  .comparison-column,
+  .mcm-compare-grid > *,
+  .lis-compare-grid > * {
+    flex: 0 0 90% !important;
+    scroll-snap-align: center;
+    max-width: 90vw;
+  }
+
+  /* Make sure internal content scrolls instead of being clipped */
+  .comparison-column-content {
+    overflow-y: auto;
+  }
 }
