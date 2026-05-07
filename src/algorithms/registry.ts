@@ -16,10 +16,12 @@ import { knapsackApproaches } from './knapsack';
 import { lcsApproaches } from './lcs';
 
 import { editDistanceApproaches } from './edit-distance';
+import { mcmApproaches } from './mcm';
 
 export const algorithmRegistry: AlgorithmRegistry = {
   fibonacci: fibonacciApproaches,
   knapsack: knapsackApproaches,
   lcs: lcsApproaches,
   'edit-distance': editDistanceApproaches,
+  mcm: mcmApproaches,
 };

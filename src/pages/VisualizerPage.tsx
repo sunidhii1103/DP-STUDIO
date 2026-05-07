@@ -13,10 +13,71 @@ import { CodePanel } from '../components/panels/CodePanel';
 import { ComparisonPanel } from '../components/panels/ComparisonPanel';
 
 import { usePlayback } from '../hooks/usePlayback';
-import type { Step } from '../types/step.types';
+import type { AlgorithmId, Step } from '../types/step.types';
 
 type Mode = 'single' | 'comparison';
-type AlgorithmSelection = 'fibonacci' | 'knapsack' | 'lcs' | 'edit-distance';
+type AlgorithmSelection = AlgorithmId;
+
+const safeText = (value: unknown, fallback = '-'): string => {
+  if (value === null || value === undefined || value === '') return fallback;
+  if (typeof value === 'number' && !Number.isFinite(value)) return fallback;
+  const text = String(value);
+  return text === 'NaN' || text === 'undefined' ? fallback : text;
+};
+
+const MCMCostPanel: React.FC<{ variables: Record<string, unknown> }> = ({ variables }) => {
+  const i = safeText(variables.i, '?');
+  const j = safeText(variables.j, '?');
+  const k = safeText(variables.k, '?');
+  const left = safeText(variables.left);
+  const right = safeText(variables.right);
+  const merge = safeText(variables.merge);
+  const cost = safeText(variables.cost);
+  const dimLeft = safeText(variables.dimLeft);
+  const dimMid = safeText(variables.dimMid);
+  const dimRight = safeText(variables.dimRight);
+
+  return (
+    <div className="mcm-cost-panel">
+      <div className="mcm-cost-row">
+        <span className="mcm-cost-label">Dependencies</span>
+        <code>dp[{i}][{k}]</code>
+        <code>dp[{Number(k) + 1 || '?'}][{j}]</code>
+      </div>
+      <div className="mcm-cost-equation">
+        <span>cost =</span>
+        <code>{left}</code>
+        <span>+</span>
+        <code>{right}</code>
+        <span>+</span>
+        <code>({dimLeft}×{dimMid}×{dimRight}) = {merge}</code>
+        <span>=</span>
+        <strong>{cost}</strong>
+      </div>
+    </div>
+  );
+};
+
+function parseMCMDimensions(raw: string): { dimensions: number[]; error: string | null } {
+  const tokens = raw.split(',').map(token => token.trim());
+  if (tokens.some(token => token.length === 0)) {
+    return { dimensions: [], error: 'Use comma-separated dimensions only.' };
+  }
+  if (tokens.some(token => !/^\d+$/.test(token))) {
+    return { dimensions: [], error: 'Dimensions must be numeric positive integers.' };
+  }
+  const dimensions = tokens.map(Number);
+  if (dimensions.some(value => value <= 0)) {
+    return { dimensions: [], error: 'Dimensions must be positive integers.' };
+  }
+  if (dimensions.length < 3) {
+    return { dimensions: [], error: 'Enter at least 3 dimensions for 2 matrices.' };
+  }
+  if (dimensions.length > 9) {
+    return { dimensions: [], error: 'Use at most 9 dimensions for readability.' };
+  }
+  return { dimensions, error: null };
+}
 
 export const VisualizerPage: React.FC = () => {
   const [mode, setMode] = useState<Mode>('single');
@@ -26,6 +87,7 @@ export const VisualizerPage: React.FC = () => {
   const [knapCapacity, setKnapCapacity] = useState(5);
   const [lcsS1, setLcsS1] = useState('ABCBDAB');
   const [lcsS2, setLcsS2] = useState('BDCAB');
+  const [mcmDimensions, setMcmDimensions] = useState('10,30,5,60');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [knapItems, _setKnapItems] = useState([
     { weight: 2, value: 3, label: 'A' },
@@ -33,12 +95,18 @@ export const VisualizerPage: React.FC = () => {
     { weight: 4, value: 5, label: 'C' },
   ]);
 
+  const parsedMCM = React.useMemo(() => parseMCMDimensions(mcmDimensions), [mcmDimensions]);
+
   const { tabulationSteps, memoizationSteps } = React.useMemo(() => {
     if (!uiRegistry || !uiRegistry[algo]) return { tabulationSteps: [], memoizationSteps: [] };
     try {
       let inputConfig;
       if (algo === 'fibonacci') inputConfig = { n: fibN };
       else if (algo === 'knapsack') inputConfig = { capacity: knapCapacity, items: knapItems };
+      else if (algo === 'mcm') {
+        if (parsedMCM.error) return { tabulationSteps: [], memoizationSteps: [] };
+        inputConfig = { dimensions: parsedMCM.dimensions };
+      }
       else inputConfig = { s1: lcsS1, s2: lcsS2 };
 
       const result = uiRegistry[algo].generateSteps(inputConfig);
@@ -50,7 +118,7 @@ export const VisualizerPage: React.FC = () => {
       console.error("Failed to generate steps:", e);
       return { tabulationSteps: [], memoizationSteps: [] };
     }
-  }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2]);
+  }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, parsedMCM]);
 
   const totalSteps = mode === 'single' 
     ? tabulationSteps.length 
@@ -71,7 +139,13 @@ export const VisualizerPage: React.FC = () => {
   useEffect(() => {
     setCurrentStepIndex(0);
     pause();
-  }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, setCurrentStepIndex, pause]);
+  }, [algo, fibN, knapCapacity, knapItems, lcsS1, lcsS2, mcmDimensions, setCurrentStepIndex, pause]);
+
+  useEffect(() => {
+    if (algo === 'mcm' && mode === 'comparison') {
+      setMode('single');
+    }
+  }, [algo, mode]);
 
   const toggleMode = () => {
     pause();
@@ -82,6 +156,47 @@ export const VisualizerPage: React.FC = () => {
   const renderExplanation = (step: Step) => {
     if (!step || !step.explanation || !step.explanation.variables) return null;
     const { operationType, variables } = step.explanation;
+    
+    if (step.algorithm === 'mcm') {
+      if (operationType === 'initialize') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>{safeText(variables.desc, `dp[${safeText(variables.i)}][${safeText(variables.j)}] = 0`)}</p>;
+      }
+      if (operationType === 'chain_length') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Starting diagonal traversal for chain length <strong>{safeText(variables.chainLength)}</strong>.</p>;
+      }
+      if (operationType === 'select_interval') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Current interval: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>{safeText(variables.interval, 'selected interval')}</code>. We will try every split inside it.</p>;
+      }
+      if (operationType === 'try_split') {
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <p style={{ fontSize: '1.1rem', margin: 0 }}>Trying split at <strong>k = {safeText(variables.k)}</strong>: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>{safeText(variables.leftInterval, 'left interval')}</code> + <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>{safeText(variables.rightInterval, 'right interval')}</code>.</p>
+            <MCMCostPanel variables={variables} />
+          </div>
+        );
+      }
+      if (operationType === 'calculate_cost') {
+        return (
+          <div style={{ fontSize: '1.1rem', lineHeight: 1.7, display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <p style={{ margin: 0 }}>Total cost = left subproblem + right subproblem + multiplication cost</p>
+            <MCMCostPanel variables={variables} />
+          </div>
+        );
+      }
+      if (operationType === 'update_min') {
+        return <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-success)' }}>New minimum found: <strong>{safeText(variables.best)}</strong> using split <strong>k = {safeText(variables.k)}</strong>.</p>;
+      }
+      if (operationType === 'final_decision') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Choosing minimum among all partitions for <strong>{safeText(variables.interval, 'this interval')}</strong>: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px', color: 'var(--color-success)' }}>{safeText(variables.best)}</code>.</p>;
+      }
+      if (operationType === 'backtrack_split') {
+        return <p style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-info)' }}><strong>Reconstruction:</strong> {safeText(variables.desc, 'Following the stored split for this interval.')}<br /><span style={{ color: 'var(--color-text-secondary)' }}>Parenthesization: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>{safeText(variables.parenthesization, 'not available')}</code></span></p>;
+      }
+      if (operationType === 'result') {
+        return <p style={{ fontSize: '1.1rem', margin: 0 }}>Minimum scalar multiplication cost: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px', color: 'var(--color-success)' }}>{safeText(variables.result)}</code><br /><span style={{ color: 'var(--color-text-secondary)' }}>Optimal parenthesization: <code style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>{safeText(variables.parenthesization, 'not available')}</code></span></p>;
+      }
+      return null;
+    }
     
     if (step.algorithm === 'knapsack') {
       if (operationType === 'initialize') {
@@ -269,6 +384,33 @@ export const VisualizerPage: React.FC = () => {
     return null;
   };
 
+  if (algo === 'mcm' && parsedMCM.error) {
+    return (
+      <MainLayout>
+        <Header 
+          algo={algo}
+          fibN={fibN}
+          knapCapacity={knapCapacity}
+          lcsS1={lcsS1}
+          lcsS2={lcsS2}
+          mcmDimensions={mcmDimensions}
+          mcmValidationError={parsedMCM.error}
+          setAlgo={setAlgo}
+          setFibN={setFibN}
+          setKnapCapacity={setKnapCapacity}
+          setLcsS1={setLcsS1}
+          setLcsS2={setLcsS2}
+          setMcmDimensions={setMcmDimensions}
+          mode={mode}
+          toggleMode={toggleMode}
+          learningMode={learningMode}
+          setLearningMode={setLearningMode}
+        />
+        <div style={{ padding: '2rem', color: 'var(--color-text-primary)' }}>{parsedMCM.error}</div>
+      </MainLayout>
+    );
+  }
+
   if (!tabulationSteps || tabulationSteps.length === 0 || (algo === 'fibonacci' && (!memoizationSteps || memoizationSteps.length === 0))) {
     return <div style={{ padding: '2rem', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-bg-primary)', height: '100vh' }}>Loading...</div>;
   }
@@ -287,11 +429,14 @@ export const VisualizerPage: React.FC = () => {
         knapCapacity={knapCapacity}
         lcsS1={lcsS1}
         lcsS2={lcsS2}
+        mcmDimensions={mcmDimensions}
+        mcmValidationError={algo === 'mcm' ? parsedMCM.error : null}
         setAlgo={setAlgo}
         setFibN={setFibN}
         setKnapCapacity={setKnapCapacity}
         setLcsS1={setLcsS1}
         setLcsS2={setLcsS2}
+        setMcmDimensions={setMcmDimensions}
         mode={mode}
         toggleMode={toggleMode}
         learningMode={learningMode}

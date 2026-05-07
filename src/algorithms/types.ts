@@ -17,4 +17,14 @@ export type {
   FibonacciInput,
   KnapsackInput,
   LCSInput,
+  MCMInput,
 } from '../types/algorithm.types';
+
+export type {
+  Step,
+  CellState,
+  TableSnapshot,
+  TableSnapshot2D,
+  StepMetrics,
+  OperationType,
+} from '../types/step.types';

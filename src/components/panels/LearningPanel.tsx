@@ -5,6 +5,13 @@ interface LearningPanelProps {
   step: Step;
 }
 
+const safeText = (value: unknown, fallback = '-'): string => {
+  if (value === null || value === undefined || value === '') return fallback;
+  if (typeof value === 'number' && !Number.isFinite(value)) return fallback;
+  const text = String(value);
+  return text === 'NaN' || text === 'undefined' ? fallback : text;
+};
+
 export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
   const { explanation, algorithm } = step;
   
@@ -196,6 +203,52 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
         actionText = `Operation: ${operationType} at state [${i}][${j}].`;
         reasonText = `Progressing the Edit Distance matrix.`;
     }
+  } else if (algorithm === 'mcm') {
+    const { i, j, k, interval, leftInterval, rightInterval, formula, parenthesization } = variables;
+
+    switch (operationType) {
+      case 'initialize':
+        actionText = `Set dp[${safeText(i)}][${safeText(j)}] = 0 for a single matrix.`;
+        reasonText = `Multiplying one matrix needs no scalar multiplications, so the diagonal is the base case.`;
+        break;
+      case 'chain_length':
+        actionText = `Begin filling the diagonal for chain length ${safeText(variables.chainLength)}.`;
+        reasonText = `Interval DP solves shorter chains before longer chains so every subproblem dependency is already available.`;
+        break;
+      case 'select_interval':
+        actionText = `Select interval ${safeText(interval, 'the current interval')}.`;
+        reasonText = `This cell asks: what is the cheapest way to multiply this contiguous chain of matrices?`;
+        break;
+      case 'try_split':
+        actionText = `Trying split at k = ${safeText(k)}.`;
+        reasonText = `The final multiplication could happen after any matrix in the interval, so we test each partition.`;
+        break;
+      case 'calculate_cost':
+        actionText = `Calculate candidate cost: ${safeText(formula, 'left + right + multiplication cost')}.`;
+        reasonText = `Total cost = left subproblem + right subproblem + multiplication cost.`;
+        break;
+      case 'update_min':
+        actionText = `Update the current best split to k = ${safeText(k)}.`;
+        reasonText = `We keep the smallest candidate because the goal is minimum scalar multiplication cost.`;
+        break;
+      case 'final_decision':
+        actionText = `Finalize ${safeText(interval, 'this interval')} with cost ${safeText(variables.best)}.`;
+        reasonText = `After trying every split, this cell stores the minimum among all partitions.`;
+        break;
+      case 'backtrack_split':
+        actionText = k === '' ? `Reached base matrix ${safeText(interval, 'A?')}.` : `Trace chosen split k = ${safeText(k)}.`;
+        reasonText = k === ''
+          ? `No further split is needed for a single matrix, so this reconstruction branch is complete.`
+          : `The split table tells us to reconstruct ${safeText(leftInterval, 'the left interval')} and ${safeText(rightInterval, 'the right interval')} recursively.`;
+        break;
+      case 'result':
+        actionText = `Optimal parenthesization: ${safeText(parenthesization, 'not available')}.`;
+        reasonText = `The final cell stores the optimal cost, and the split table reconstructs the multiplication order.`;
+        break;
+      default:
+        actionText = `Operation: ${operationType} at interval [${safeText(i)}][${safeText(j)}].`;
+        reasonText = `Progressing the interval DP table.`;
+    }
   } else {
     // Generic fallback for other algorithms
     actionText = `Executing ${operationType} operation.`;
@@ -209,7 +262,7 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
   } else if (conceptNoteType === 'base_case' || operationType === 'initialize') {
     conceptTitle = 'Base Case Initialization';
     conceptText = `Dynamic programming relies on trivial base cases. We know immediately what the answer is without any complex computation. We store this to build larger answers.`;
-  } else if (operationType === 'compute' || operationType === 'match' || operationType === 'mismatch' || operationType === 'choose_top' || operationType === 'choose_left') {
+  } else if (operationType === 'compute' || operationType === 'match' || operationType === 'mismatch' || operationType === 'choose_top' || operationType === 'choose_left' || operationType === 'edit_match' || operationType === 'try_split' || operationType === 'calculate_cost' || operationType === 'update_min' || operationType === 'final_decision') {
     if (algorithm === 'knapsack') {
       conceptTitle = 'Decision Making (Optimal Substructure)';
       conceptText = `Each cell represents a subproblem. We branch our decision: either exclude the item or include it (adding its value to the optimal sub-solution for the remaining capacity). We take the max of both branches!`;
@@ -227,6 +280,9 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ step }) => {
       } else {
         conceptText = `When characters mismatch, the optimal solution is exactly 1 operation plus the minimum of Replacing (diagonal), Deleting (top), or Inserting (left).`;
       }
+    } else if (algorithm === 'mcm') {
+      conceptTitle = 'Interval DP (Optimal Substructure)';
+      conceptText = `The best way to multiply an interval is built from the best way to multiply its left and right subintervals, plus the scalar cost of merging those two results.`;
     } else {
       conceptTitle = 'State Transition (Optimal Substructure)';
       conceptText = `To solve for the current state, we don't need to recalculate from scratch. The optimal solution is built purely from the optimal solutions of its immediate subproblems.`;

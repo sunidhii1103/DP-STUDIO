@@ -23,13 +23,40 @@ export const VisualPanel: React.FC<VisualPanelProps> = ({
 }) => {
   const isReconstructionPhase = 
     (step.algorithm === 'lcs' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.partialLCS !== undefined))) ||
-    (step.algorithm === 'edit-distance' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.transformedStr !== undefined) || (['edit_replace', 'edit_delete', 'edit_insert'].includes(step.operation) && step.explanation?.variables?.transformedStr !== undefined)));
+    (step.algorithm === 'edit-distance' && (step.operation.startsWith('backtrack') || (step.operation === 'result' && step.explanation?.variables?.transformedStr !== undefined) || (['edit_replace', 'edit_delete', 'edit_insert'].includes(step.operation) && step.explanation?.variables?.transformedStr !== undefined))) ||
+    (step.algorithm === 'mcm' && step.operation === 'backtrack_split');
+  const isMCM = step.algorithm === 'mcm';
+  const stepVariables = step.explanation?.variables ?? {};
+  const chainLengthValue = Number(stepVariables.chainLength);
+  const chainLengthLabel = Number.isFinite(chainLengthValue) && chainLengthValue > 0
+    ? `Processing chain length = ${chainLengthValue}`
+    : isReconstructionPhase
+      ? 'Reconstructing optimal parenthesization'
+      : 'Matrix chain interval DP';
+  const intervalLabel = typeof stepVariables.interval === 'string' && stepVariables.interval
+    ? stepVariables.interval
+    : step.activeIndices?.j !== undefined
+      ? `A${step.activeIndices.i + 1}..A${step.activeIndices.j + 1}`
+      : '';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
       {title && <h3 style={{ margin: 0, color: 'var(--color-text-primary)' }}>{title}</h3>}
       
       <div className="panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', flexShrink: 0 }}>
+        {isMCM && (
+          <div className="mcm-interval-guide">
+            <div className="mcm-chain-status">
+              <span>{chainLengthLabel}</span>
+              {intervalLabel && <code>{intervalLabel}</code>}
+            </div>
+            <div className="mcm-mini-legend" aria-label="Matrix chain interval DP legend">
+              <span><strong>i</strong> start matrix</span>
+              <span><strong>j</strong> end matrix</span>
+              <span><strong>k</strong> split position</span>
+            </div>
+          </div>
+        )}
         <DPTable 
           snapshot={step.tableSnapshot as TableSnapshot1D} 
           activeIndices={step.activeIndices} 

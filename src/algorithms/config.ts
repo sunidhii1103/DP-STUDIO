@@ -117,11 +117,34 @@ const EDIT_DISTANCE_MEMOIZATION_CODE = [
   "}"
 ];
 
+const MCM_TABULATION_CODE = algorithmRegistry.mcm.tabulation?.getCode?.() ?? [
+  "function matrixChainOrder(p) {",
+  "  const n = p.length - 1;",
+  "  const dp = Array.from({ length: n }, () => Array(n).fill(0));",
+  "  const split = Array.from({ length: n }, () => Array(n).fill(null));",
+  "  for (let i = 0; i < n; i++) dp[i][i] = 0;",
+  "  for (let len = 2; len <= n; len++) {",
+  "    for (let i = 0; i <= n - len; i++) {",
+  "      const j = i + len - 1;",
+  "      dp[i][j] = Infinity;",
+  "      for (let k = i; k < j; k++) {",
+  "        const cost = dp[i][k] + dp[k + 1][j] + p[i] * p[k + 1] * p[j + 1];",
+  "        if (cost < dp[i][j]) {",
+  "          dp[i][j] = cost;",
+  "          split[i][j] = k;",
+  "        }",
+  "      }",
+  "    }",
+  "  }",
+  "  return { cost: dp[0][n - 1], parenthesization: build(0, n - 1, split) };",
+  "}"
+];
+
 export const uiRegistry = {
   fibonacci: {
     generateSteps: (input: any) => ({
-      tabulation: algorithmRegistry.fibonacci.tabulation.generateSteps(input),
-      memoization: algorithmRegistry.fibonacci.memoization.generateSteps(input)
+      tabulation: algorithmRegistry.fibonacci.tabulation!.generateSteps(input),
+      memoization: algorithmRegistry.fibonacci.memoization!.generateSteps(input)
     }),
     code: {
       tabulation: FIBONACCI_TABULATION_CODE,
@@ -130,8 +153,8 @@ export const uiRegistry = {
   },
   knapsack: {
     generateSteps: (input: any) => ({
-      tabulation: algorithmRegistry.knapsack.tabulation.generateSteps(input),
-      memoization: algorithmRegistry.knapsack.memoization.generateSteps(input)
+      tabulation: algorithmRegistry.knapsack.tabulation!.generateSteps(input),
+      memoization: algorithmRegistry.knapsack.memoization!.generateSteps(input)
     }),
     code: {
       tabulation: KNAPSACK_TABULATION_CODE,
@@ -156,6 +179,16 @@ export const uiRegistry = {
     code: {
       tabulation: EDIT_DISTANCE_TABULATION_CODE,
       memoization: EDIT_DISTANCE_MEMOIZATION_CODE
+    }
+  },
+  mcm: {
+    generateSteps: (input: any) => ({
+      tabulation: algorithmRegistry.mcm.tabulation!.generateSteps(input),
+      memoization: []
+    }),
+    code: {
+      tabulation: MCM_TABULATION_CODE,
+      memoization: []
     }
   }
 };

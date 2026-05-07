@@ -6,13 +6,14 @@ interface DPTableProps {
   activeIndices?: ActiveIndices;
 }
 
-const renderCell = (cell: CellState, indexKey: string, isActiveIndex: boolean) => {
-  const displayValue = cell.value !== null ? cell.value : '-';
+const renderCell = (cell: CellState, indexKey: string, isActiveIndex: boolean, extraClassName = '', displayOverride?: React.ReactNode) => {
+  const displayValue = displayOverride ?? (cell.value !== null ? cell.value : '-');
   
   let className = 'dp-cell';
   if (cell.state !== 'idle') {
-    className += ` ${cell.state}`;
+    className += ` ${cell.state} dp-cell--${cell.state}`;
   }
+  if (extraClassName) className += ` ${extraClassName}`;
   if (isActiveIndex && cell.state !== 'active') {
     className += ' target-index';
   }
@@ -32,6 +33,25 @@ const renderCell = (cell: CellState, indexKey: string, isActiveIndex: boolean) =
   );
 };
 
+const getIntervalCellContent = (cell: CellState, split: number | null | undefined): React.ReactNode => {
+  if (cell.value === null) return '-';
+
+  const rawValue = String(cell.value);
+  const costText = rawValue.includes('|') ? rawValue.split('|')[0]?.trim() : rawValue;
+  const safeCost = costText && costText !== 'NaN' && costText !== 'undefined' ? costText : '-';
+
+  if (split === null || split === undefined || !Number.isFinite(split)) {
+    return <span className="interval-cell-value">{safeCost}</span>;
+  }
+
+  return (
+    <span className="interval-cell-content">
+      <span className="interval-cell-value">{safeCost}</span>
+      <span className="interval-split-pill">k = {split + 1}</span>
+    </span>
+  );
+};
+
 export const DPTable: React.FC<DPTableProps> = ({ snapshot, activeIndices }) => {
   if (snapshot.dimensions === 1) {
     return (
@@ -43,6 +63,13 @@ export const DPTable: React.FC<DPTableProps> = ({ snapshot, activeIndices }) => 
       </div>
     );
   }
+
+  const metadata = snapshot.metadata ?? {};
+  const isIntervalTable = metadata.tableKind === 'interval';
+  const splitTable = metadata.splitTable as (number | null)[][] | undefined;
+  const boundaryCells = new Set((metadata.boundaryCells as string[] | undefined) ?? []);
+  const pathCells = new Set((metadata.pathCells as string[] | undefined) ?? []);
+  const splitCells = new Set((metadata.splitCells as string[] | undefined) ?? []);
 
   // 2D rendering
   return (
@@ -65,7 +92,18 @@ export const DPTable: React.FC<DPTableProps> = ({ snapshot, activeIndices }) => 
           )}
           {row.map((cell, j) => {
             const isActiveIndex = activeIndices && activeIndices.i === i && activeIndices.j === j;
-            return renderCell(cell, `2d-${i}-${j}`, !!isActiveIndex);
+            const isLowerIntervalCell = isIntervalTable && i > j;
+            const split = splitTable?.[i]?.[j];
+            const extraClasses = [
+              isIntervalTable ? 'interval-cell' : '',
+              isLowerIntervalCell ? 'interval-cell--empty' : '',
+              boundaryCells.has(`${i},${j}`) ? 'interval-cell--boundary' : '',
+              pathCells.has(`${i},${j}`) ? 'interval-cell--reconstruction-path' : '',
+              splitCells.has(`${i},${j}`) ? 'interval-cell--chosen-split' : '',
+              split !== null && split !== undefined && cell.value !== null ? 'interval-cell--split' : '',
+            ].filter(Boolean).join(' ');
+            const displayOverride = isLowerIntervalCell ? '' : (isIntervalTable ? getIntervalCellContent(cell, split) : undefined);
+            return renderCell(cell, `2d-${i}-${j}`, !!isActiveIndex, extraClasses, displayOverride);
           })}
         </div>
       ))}

@@ -5,6 +5,7 @@
  * ============================================================================ */
 
 import type { Step, Approach, ExplanationMetadata } from './step.types';
+import type { TableSnapshot } from './step.types';
 
 /* ── Algorithm Input Types ────────────────────────────────────────────────── */
 
@@ -38,8 +39,13 @@ export interface EditDistanceInput {
   s2: string;
 }
 
+export interface MCMInput {
+  /** Matrix dimensions p. Matrix Ai has size p[i-1] x p[i]. */
+  dimensions: number[];
+}
+
 /** Union of all possible algorithm inputs */
-export type AlgorithmInput = FibonacciInput | KnapsackInput | LCSInput | EditDistanceInput;
+export type AlgorithmInput = FibonacciInput | KnapsackInput | LCSInput | EditDistanceInput | MCMInput;
 
 /* ── Validation ───────────────────────────────────────────────────────────── */
 
@@ -105,6 +111,18 @@ export interface AlgorithmModule {
    * No UI side effects.
    */
   generateSteps(input: AlgorithmInput): Step[];
+
+  /** Optional helper for algorithms that can expose an initial grid directly. */
+  generateGrid?(input: AlgorithmInput): TableSnapshot;
+
+  /** Optional code provider used by registry bridges that prefer module-owned code. */
+  getCode?(): string[];
+
+  /** Optional static metadata for algorithm-specific UI or docs. */
+  getMetadata?(): Record<string, unknown>;
+
+  /** Optional learning context for algorithm-specific teaching panels. */
+  getLearningContext?(): Record<string, unknown>;
 
   /** Return static complexity metadata for this algorithm + approach */
   getComplexity(): ComplexityMetadata;

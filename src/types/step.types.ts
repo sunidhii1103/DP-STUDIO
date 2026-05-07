@@ -9,7 +9,7 @@
 /* ── Core Enums / Unions ──────────────────────────────────────────────────── */
 
 /** Supported algorithm identifiers */
-export type AlgorithmId = 'fibonacci' | 'knapsack' | 'lcs' | 'edit-distance';
+export type AlgorithmId = 'fibonacci' | 'knapsack' | 'lcs' | 'edit-distance' | 'mcm';
 
 /** Supported approach strategies */
 export type Approach = 'brute_force' | 'memoization' | 'tabulation';
@@ -44,7 +44,15 @@ export type OperationType =
   | 'backtrack_edit_match'
   | 'backtrack_edit_insert'
   | 'backtrack_edit_delete'
-  | 'backtrack_edit_replace';
+  | 'backtrack_edit_replace'
+  // Matrix Chain Multiplication Specific Actions
+  | 'chain_length'
+  | 'select_interval'
+  | 'try_split'
+  | 'calculate_cost'
+  | 'update_min'
+  | 'final_decision'
+  | 'backtrack_split';
 
 /** Visual state of a single DP table cell (drives CSS classes per AGENTS.md §2.1) */
 export type CellVisualState =
@@ -72,6 +80,7 @@ export interface TableSnapshot1D {
   dimensions: 1;
   labels?: string[];
   cells: CellState[];
+  metadata?: Record<string, unknown>;
 }
 
 /** 2D table snapshot (e.g., Knapsack, LCS) */
@@ -80,6 +89,7 @@ export interface TableSnapshot2D {
   rowLabels?: string[];
   colLabels?: string[];
   cells: CellState[][];
+  metadata?: Record<string, unknown>;
 }
 
 /** Complete table snapshot at a given step */
@@ -167,6 +177,9 @@ export interface Step {
 
   /** Dependencies referenced this step (cells read to compute active cell) */
   dependencyIndices: ActiveIndices[];
+
+  /** Optional algorithm-specific structured metadata. Must remain JSON-serializable. */
+  metadata?: Record<string, unknown>;
 
   /* ── Code Reference ───────────────────────────────────────────────────── */
 
