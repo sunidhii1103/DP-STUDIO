@@ -48,7 +48,7 @@ export const ComparisonPanel: React.FC<ComparisonPanelProps> = ({
           </div>
         )}
         <div className="comparison-column-content">
-          <div className="panel visual-panel responsive-visual-panel">
+        <div className="panel visual-panel responsive-visual-panel">
             <VisualPanel 
               step={leftStep} 
               learningMode={learningMode} 
@@ -57,7 +57,7 @@ export const ComparisonPanel: React.FC<ComparisonPanelProps> = ({
               isBetterSpace={leftIsBetterSpace}
             />
           </div>
-          <div className="panel code-panel responsive-code-panel algorithm-code-panel">
+          <div data-tour="step-6" className="panel code-panel responsive-code-panel algorithm-code-panel">
             <div className="code-panel-header">
               <span className="code-panel-title">Memoization Code</span>
             </div>

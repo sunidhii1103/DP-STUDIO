@@ -1,228 +1,218 @@
-import React from 'react';
-import type { AlgorithmId } from '../../types/step.types';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import './tutorial.css';
 
-interface TutorialOverlayProps {
-  algorithm: AlgorithmId;
-  open: boolean;
-  onClose: (completed: boolean) => void;
-}
-
-interface TourStep {
-  selector?: string;
+export interface TutorialStep {
+  targetId: string;
   title: string;
-  body: string;
-  tip?: string;
+  description: string;
 }
 
-const algorithmTip = (algorithm: AlgorithmId): TourStep => {
-  if (algorithm === 'mcm') {
-    return {
-      selector: '[data-tour="visualization-panel"]',
-      title: 'MCM Interval DP',
-      body: 'Matrix Chain Multiplication fills intervals diagonally. Shorter chains are solved first so longer chains can reuse them.',
-      tip: 'In compare mode, diagonal waves show the bottom-up traversal order.',
-    };
-  }
-  if (algorithm === 'lis') {
-    return {
-      selector: '[data-tour="visualization-panel"]',
-      title: 'LIS Sequence Thinking',
-      body: 'LIS tracks sequence order. In single mode, parent links reconstruct the subsequence; in compare mode, tails[] shows the O(n log n) leap.',
-      tip: 'tails[] stores best possible tails, not necessarily the final subsequence.',
-    };
-  }
-  if (algorithm === 'knapsack') {
-    return {
-      selector: '[data-tour="visualization-panel"]',
-      title: 'Knapsack Decisions',
-      body: 'Each state compares include vs exclude. The table records the best value under a capacity limit.',
-      tip: 'Dependency cells show where each include/exclude option reads from.',
-    };
-  }
-  if (algorithm === 'fibonacci') {
-    return {
-      selector: '[data-tour="metrics-panel"]',
-      title: 'Fibonacci Reuse',
-      body: 'Memoization and tabulation reuse previously solved states instead of recomputing recursive branches.',
-      tip: 'Cache hits mean a state was retrieved, not recomputed.',
-    };
-  }
-  return {
-    selector: '[data-tour="visualization-panel"]',
-    title: 'String DP Paths',
-    body: 'The highlighted dependencies show how the next state is built from neighboring states.',
-    tip: 'Backtracking reconstructs the actual answer after the table has the optimal value.',
-  };
-};
+interface TutorialOverlayProps {
+  steps: TutorialStep[];
+  onClose: () => void;
+  isOpen: boolean;
+}
 
-const buildSteps = (algorithm: AlgorithmId): TourStep[] => [
-  {
-    title: 'Welcome to DP Studio',
-    body: 'Explore dynamic programming through synchronized visuals, code, metrics, and guided explanations.',
-    tip: 'You can skip this tour now and replay it from the Tutorial or help buttons.',
-  },
-  {
-    selector: '[data-tour="algorithm-selector"]',
-    title: 'Choose an Algorithm',
-    body: 'Switch between Fibonacci, Knapsack, LCS, Edit Distance, MCM, and LIS without changing the playback system.',
-  },
-  {
-    selector: '[data-tour="input-field"]',
-    title: 'Tune the Input',
-    body: 'Inputs are validated before steps are generated, so the visualization always receives a safe step timeline.',
-  },
-  {
-    selector: '[data-tour="playback-controls"]',
-    title: 'Playback Controls',
-    body: 'Play, pause, step forward, and step backward through immutable algorithm steps.',
-    tip: 'Yellow means the current state is being computed.',
-  },
-  {
-    selector: '[data-tour="speed-controls"]',
-    title: 'Speed',
-    body: 'Adjust animation speed while preserving the same synchronized step index.',
-  },
-  {
-    selector: '[data-tour="learning-mode"]',
-    title: 'Learning Mode',
-    body: 'Turn on contextual teaching notes that explain the action, the reason, and the core DP concept.',
-  },
-  {
-    selector: '[data-tour="compare-mode"]',
-    title: 'Compare Mode',
-    body: 'Compare mode keeps multiple strategies synchronized conceptually so you can see why optimization wins.',
-    tip: 'Red nodes indicate recomputation. Green highlights usually mean reused or finalized state.',
-  },
-  {
-    selector: '[data-tour="metrics-panel"]',
-    title: 'Metrics',
-    body: 'Metrics distinguish calls, states, transitions, comparisons, and cache hits so the cost model stays precise.',
-  },
-  {
-    selector: '[data-tour="code-panel"]',
-    title: 'Code Sync',
-    body: 'The active code line follows the current step, connecting the visual state to the exact operation.',
-  },
-  algorithmTip(algorithm),
-];
+export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ steps, onClose, isOpen }) => {
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
-export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ algorithm, open, onClose }) => {
-  const steps = React.useMemo(() => buildSteps(algorithm), [algorithm]);
-  const [stepIndex, setStepIndex] = React.useState(0);
-  const [targetRect, setTargetRect] = React.useState<DOMRect | null>(null);
-  const current = steps[Math.min(stepIndex, steps.length - 1)]!;
+  const currentStep = steps[currentStepIndex];
+  const overlayRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
-    if (!open) return;
-    const id = window.requestAnimationFrame(() => setStepIndex(0));
-    return () => window.cancelAnimationFrame(id);
-  }, [open, algorithm]);
-
-  React.useEffect(() => {
-    if (!open) return undefined;
-
-    const updateTarget = () => {
-      if (!current.selector) {
-        setTargetRect(null);
-        return;
+  const updateTargetPosition = useCallback(() => {
+    if (!isOpen || !currentStep) return;
+    const el = document.querySelector(`[data-tour="${currentStep.targetId}"]`);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setTargetRect(rect);
+      
+      // Only scroll if element is not fully visible
+      const isFullyVisible = (
+        rect.top >= 100 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) - 100 &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+      );
+      
+      if (!isFullyVisible) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        // After scrolling, update rect again
+        setTimeout(() => {
+          const newRect = el.getBoundingClientRect();
+          setTargetRect(newRect);
+        }, 300);
       }
-      const element = document.querySelector(current.selector);
-      if (!element) {
-        setTargetRect(null);
-        return;
-      }
-      setTargetRect(element.getBoundingClientRect());
-    };
-
-    updateTarget();
-    window.addEventListener('resize', updateTarget);
-    window.addEventListener('scroll', updateTarget, true);
-    return () => {
-      window.removeEventListener('resize', updateTarget);
-      window.removeEventListener('scroll', updateTarget, true);
-    };
-  }, [current, open]);
-
-  if (!open) return null;
-
-  const isLast = stepIndex === steps.length - 1;
-  const cardStyle: React.CSSProperties = targetRect
-    ? {
-      left: Math.min(window.innerWidth - 380, Math.max(16, targetRect.left + targetRect.width / 2 - 180)),
-      top: targetRect.bottom + 18 > window.innerHeight - 260 ? Math.max(16, targetRect.top - 250) : targetRect.bottom + 18,
+    } else {
+      setTargetRect(null);
     }
-    : {};
+  }, [isOpen, currentStep]);
+
+  // Initialize on open
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentStepIndex(0);
+    }
+  }, [isOpen]);
+
+  // Update position when step changes
+  useEffect(() => {
+    if (isOpen) {
+      updateTargetPosition();
+    }
+  }, [currentStepIndex, isOpen, updateTargetPosition]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+      updateTargetPosition();
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', updateTargetPosition, true);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', updateTargetPosition, true);
+    };
+  }, [updateTargetPosition]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') handleNext();
+      if (e.key === 'ArrowLeft') handlePrev();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, currentStepIndex]);
+
+  if (!isOpen || !currentStep) return null;
+
+  const handleNext = () => {
+    if (currentStepIndex < steps.length - 1) {
+      setCurrentStepIndex(prev => prev + 1);
+    } else {
+      onClose();
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex(prev => prev - 1);
+    }
+  };
+
+  let tooltipTop = 0;
+  let tooltipLeft = 0;
+  let tooltipPlacement = 'bottom';
+
+  const isMobile = windowSize.width <= 768;
+
+  if (targetRect) {
+    const spaceBelow = windowSize.height - targetRect.bottom;
+    const spaceAbove = targetRect.top;
+    
+    if (isMobile && spaceBelow < 280 && spaceAbove < 280) {
+      tooltipPlacement = 'center';
+      tooltipTop = windowSize.height / 2;
+      tooltipLeft = windowSize.width / 2;
+    } else if (spaceBelow < 280 && spaceAbove > 280) {
+      tooltipPlacement = 'top';
+      tooltipTop = targetRect.top - 24; 
+    } else {
+      tooltipPlacement = 'bottom';
+      tooltipTop = targetRect.bottom + 24;
+    }
+
+    if (tooltipPlacement !== 'center') {
+      tooltipLeft = targetRect.left + (targetRect.width / 2);
+      const tooltipHalfWidth = isMobile ? (windowSize.width - 32) / 2 : 170;
+      const maxLeft = windowSize.width - tooltipHalfWidth - 16;
+      const minLeft = tooltipHalfWidth + 16;
+      tooltipLeft = Math.max(minLeft, Math.min(maxLeft, tooltipLeft));
+    }
+  } else {
+    tooltipTop = windowSize.height / 2;
+    tooltipLeft = windowSize.width / 2;
+    tooltipPlacement = 'center';
+  }
 
   return (
-    <div className="tutorial-layer" role="dialog" aria-modal="true" aria-label="DP Studio tutorial">
-      <div className="tutorial-backdrop" />
+    <div className="tutorial-overlay-container" ref={overlayRef}>
+      <div className="tutorial-dimmer"></div>
+      
       {targetRect && (
-        <div
-          className="tutorial-spotlight"
-          style={{
-            left: targetRect.left - 12,
-            top: targetRect.top - 12,
-            width: targetRect.width + 24,
-            height: targetRect.height + 24,
-          }}
-        />
+        <>
+          <div 
+            className="tutorial-spotlight-hole"
+            style={{
+              top: targetRect.top - 8,
+              left: targetRect.left - 8,
+              width: targetRect.width + 16,
+              height: targetRect.height + 16,
+            }}
+          />
+          <div 
+            className="tutorial-spotlight-ring"
+            style={{
+              top: targetRect.top - 8,
+              left: targetRect.left - 8,
+              width: targetRect.width + 16,
+              height: targetRect.height + 16,
+            }}
+          />
+        </>
       )}
-      <div className={targetRect ? 'tutorial-card tutorial-card--targeted' : 'tutorial-card'} style={cardStyle}>
-        <div className="tutorial-progress-wrap">
-          <div className="tutorial-progress-text">
-            <span>Experience {stepIndex + 1} / {steps.length}</span>
-            <button className="tutorial-skip-btn" type="button" onClick={() => onClose(false)}>Dismiss</button>
-          </div>
-          <div className="tutorial-progress-bar-bg">
-            <div 
-              className="tutorial-progress-bar-fill" 
-              style={{ width: `${((stepIndex + 1) / steps.length) * 100}%` }} 
-            />
-          </div>
+      
+      <div 
+        className={`tutorial-tooltip tutorial-tooltip-${tooltipPlacement}`}
+        style={{
+          top: tooltipTop,
+          left: tooltipLeft,
+          transform: tooltipPlacement === 'center' ? 'translate(-50%, -50%) scale(1)' : tooltipPlacement === 'top' ? 'translate(-50%, -100%) scale(1)' : 'translate(-50%, 0) scale(1)',
+        }}
+      >
+        <div className="tutorial-tooltip-header">
+          <span className="tutorial-step-counter">
+            <span className="step-accent">Step {currentStepIndex + 1}</span> of {steps.length}
+          </span>
+          <button className="tutorial-close-btn" onClick={onClose} aria-label="Close tutorial">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
-        
-        <h3>{current.title}</h3>
-        <p>{current.body}</p>
-        
-        {current.tip && <div className="tutorial-tip">{current.tip}</div>}
-        
-        <div className="tutorial-legends" aria-label="Visualization legends">
-          <span><b className="legend-dot legend-dot--yellow" /> active</span>
-          <span><b className="legend-dot legend-dot--green" /> computed</span>
-          <span><b className="legend-dot legend-dot--red" /> recomputed</span>
-        </div>
+        <h3 className="tutorial-title">{currentStep.title}</h3>
+        <p className="tutorial-desc">{currentStep.description}</p>
         
         <div className="tutorial-actions">
-          <button 
-            type="button" 
-            disabled={stepIndex === 0} 
-            onClick={() => setStepIndex((value) => Math.max(0, value - 1))}
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            className="tutorial-primary"
-            onClick={() => {
-              if (isLast) onClose(true);
-              else setStepIndex((value) => value + 1);
-            }}
-          >
-            {isLast ? 'Complete Tour' : stepIndex === 0 ? 'Start Exploring' : 'Continue'}
-          </button>
+          <div className="tutorial-progress-pills">
+            {steps.map((_, idx) => (
+              <span 
+                key={idx} 
+                className={`tutorial-pill ${idx === currentStepIndex ? 'active' : idx < currentStepIndex ? 'completed' : ''}`} 
+              />
+            ))}
+          </div>
+          <div className="tutorial-buttons">
+            <button 
+              className="tutorial-btn-secondary" 
+              onClick={handlePrev}
+              disabled={currentStepIndex === 0}
+            >
+              Back
+            </button>
+            <button 
+              className="tutorial-btn-primary" 
+              onClick={handleNext}
+            >
+              {currentStepIndex === steps.length - 1 ? 'Finish' : 'Next'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
-interface TutorialHelpButtonProps {
-  onOpen: () => void;
-}
-
-export const TutorialHelpButton: React.FC<TutorialHelpButtonProps> = ({ onOpen }) => (
-  <button type="button" className="tutorial-help-button" onClick={onOpen} aria-label="Open tutorial and legends">
-    ?
-  </button>
-);

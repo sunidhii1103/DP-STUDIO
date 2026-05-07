@@ -1949,3 +1949,393 @@ button:hover {
     overflow-y: auto;
   }
 }
+
+/* ============================================================================
+ * MOBILE UI REFACTOR - Header & Toolbar
+ * ============================================================================ */
+
+/* Header Base Classes */
+.app-header {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.app-header-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-header-title .logo {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-header-title .logo img {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+}
+
+.app-header-title .logo span {
+  font-size: 1.25rem;
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.app-header-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--color-border);
+}
+
+.app-header-algo-name {
+  color: var(--color-text-muted);
+  font-weight: bold;
+}
+
+.app-header-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.app-header-section {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Header Inputs */
+.header-select, .header-input {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-subtle);
+  outline: none;
+  font-family: inherit;
+}
+
+.header-select {
+  cursor: pointer;
+}
+
+.header-input-short {
+  width: 80px;
+}
+
+.header-input-medium {
+  width: 90px;
+}
+
+.header-input-long {
+  width: 150px;
+}
+
+.header-input-xl {
+  width: 240px;
+}
+
+.header-input-error {
+  border-color: var(--color-error);
+}
+
+.header-input-error-msg {
+  color: var(--color-error);
+  font-size: 0.72rem;
+  margin-top: 0.25rem;
+  margin-left: 0.5rem;
+}
+
+.header-input-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Mode Toggle */
+.app-header-mode {
+  background-color: var(--color-bg-tertiary);
+  border-radius: 9999px;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+}
+
+.mode-btn {
+  padding: 0.4rem 1rem;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: none;
+  border-radius: 9999px;
+  font-weight: normal;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-btn-active {
+  background-color: var(--color-accent-primary);
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Learning & Tutorial Buttons */
+.learning-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: bold;
+  white-space: nowrap;
+  border: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.learning-btn-on {
+  background-color: var(--color-success);
+  color: #fff;
+}
+
+.learning-btn-off {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.tutorial-header-btn {
+  padding: 0.5rem 1rem;
+  background-color: rgba(34, 211, 238, 0.1);
+  color: var(--color-accent-primary);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: 9999px;
+  font-weight: bold;
+  white-space: nowrap;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.tutorial-header-btn:hover {
+  background-color: rgba(34, 211, 238, 0.2);
+}
+
+/* Toolbar Base Classes */
+.app-playback-toolbar {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-bg-elevated);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  z-index: 100;
+}
+
+.app-playback-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.play-btn {
+  padding: 0.5rem 1.5rem;
+  color: white;
+  border-radius: 9999px;
+  font-weight: bold;
+  min-width: 100px;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.play-btn:hover {
+  filter: brightness(1.1);
+}
+
+.play-btn-play {
+  background-color: var(--color-success);
+}
+
+.play-btn-pause {
+  background-color: var(--color-error);
+}
+
+.step-btn {
+  padding: 0.5rem 1rem;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-radius: 9999px;
+  border: 1px solid var(--color-border-subtle);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.step-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.step-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.step-counter {
+  color: var(--color-text-secondary);
+  margin-left: 1rem;
+  font-family: var(--font-family-mono);
+}
+
+.app-playback-speed {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.speed-label {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.speed-btn-group {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.speed-btn {
+  padding: 0.35rem 0.75rem;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.speed-btn-active {
+  background-color: var(--color-accent-primary);
+  color: #fff;
+  font-weight: bold;
+}
+
+/* ============================================================================
+ * RESPONSIVE MOBILE LAYOUT
+ * ============================================================================ */
+@media (max-width: 900px) {
+  .app-header {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1.25rem;
+  }
+
+  .app-header-controls {
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+  }
+
+  .app-header-section {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Section 1: Inputs */
+  .app-header-inputs {
+    gap: 0.5rem;
+  }
+  
+  .header-select {
+    flex: 1;
+    min-width: 100%;
+  }
+
+  .header-input-short, .header-input-medium, .header-input-long, .header-input-xl {
+    flex: 1;
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .header-input-wrapper {
+    width: 100%;
+  }
+
+  /* Section 2: Mode Toggle */
+  .app-header-mode {
+    display: flex;
+    width: 100%;
+  }
+
+  .mode-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Section 3: Learning/Tutorial */
+  .app-header-learning {
+    display: flex;
+    width: 100%;
+  }
+  
+  .learning-btn, .tutorial-header-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Toolbar */
+  .app-playback-toolbar {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1.25rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .app-playback-controls {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .play-btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .step-btn-prev, .step-btn-next {
+    flex: 1;
+  }
+
+  .step-counter {
+    width: 100%;
+    text-align: center;
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+
+  .app-playback-speed {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .speed-btn-group {
+    width: 100%;
+    display: flex;
+  }
+
+  .speed-btn {
+    flex: 1;
+  }
+}

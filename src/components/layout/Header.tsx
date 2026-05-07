@@ -15,6 +15,7 @@ interface HeaderProps {
   setFibN: (v: number) => void;
   setKnapCapacity: (v: number) => void;
   setLcsS1: (v: string) => void;
+
   setLcsS2: (v: string) => void;
   setMcmDimensions: (v: string) => void;
   setLisArray: (v: string) => void;
@@ -22,10 +23,11 @@ interface HeaderProps {
   toggleMode: () => void;
   learningMode: boolean;
   setLearningMode: (v: boolean) => void;
+  onStartTutorial: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  algo, fibN, knapCapacity, lcsS1, lcsS2, mcmDimensions, mcmValidationError, lisArray, lisValidationError, setAlgo, setFibN, setKnapCapacity, setLcsS1, setLcsS2, setMcmDimensions, setLisArray, mode, toggleMode, learningMode, setLearningMode
+  algo, fibN, knapCapacity, lcsS1, lcsS2, mcmDimensions, mcmValidationError, lisArray, lisValidationError, setAlgo, setFibN, setKnapCapacity, setLcsS1, setLcsS2, setMcmDimensions, setLisArray, mode, toggleMode, learningMode, setLearningMode, onStartTutorial
 }) => {
   const title = algo === 'fibonacci'
     ? `Fibonacci (n = ${fibN})`
@@ -40,43 +42,22 @@ export const Header: React.FC<HeaderProps> = ({
             : `LCS (${lcsS1}, ${lcsS2})`;
 
   return (
-    <header className="app-header" style={{
-      width: '100%',
-      padding: '0.75rem 1.5rem',
-      backgroundColor: 'var(--color-bg-secondary)',
-      borderBottom: '1px solid var(--color-border)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: '1rem',
-      flexWrap: 'wrap'
-    }}>
-      <div className="app-header-title" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <div className="logo" style={{ cursor: 'pointer' }} onClick={() => window.location.href = '/'}>
-          <img src="/logo.png" alt="DP Studio" style={{ width: '32px', height: '32px', borderRadius: '4px' }} />
-          <span style={{ fontSize: '1.25rem', color: 'var(--color-text-primary)' }}>DP Studio</span>
+    <header className="app-header">
+      <div className="app-header-title">
+        <div className="logo" onClick={() => window.location.href = '/'}>
+          <img src="/logo.png" alt="DP Studio" />
+          <span>DP Studio</span>
         </div>
-        <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)' }}></div>
-        <span style={{ color: 'var(--color-text-muted)', fontWeight: 'bold' }}>{title}</span>
+        <div className="app-header-divider"></div>
+        <span className="app-header-algo-name">{title}</span>
       </div>
       
-      <div className="app-header-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <div className="app-header-inputs" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      <div className="app-header-controls">
+        <div className="app-header-section app-header-inputs" data-tour="step-1">
           <select 
             value={algo} 
             onChange={(e) => setAlgo(e.target.value as AlgorithmId)}
-            style={{ 
-              padding: '0.5rem 1rem', 
-              borderRadius: '9999px', 
-              backgroundColor: 'var(--color-bg-tertiary)',
-              color: 'var(--color-text-primary)',
-              border: '1px solid var(--color-border-subtle)',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
+            className="header-select"
           >
             <option value="fibonacci">Fibonacci</option>
             <option value="knapsack">0/1 Knapsack</option>
@@ -91,15 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
               type="number" 
               value={fibN} 
               onChange={(e) => setFibN(Math.min(15, Math.max(1, parseInt(e.target.value) || 1)))}
-              style={{ 
-                padding: '0.5rem 1rem', 
-                borderRadius: '9999px', 
-                width: '80px',
-                backgroundColor: 'var(--color-bg-tertiary)',
-                color: 'var(--color-text-primary)',
-                border: '1px solid var(--color-border-subtle)',
-                outline: 'none',
-              }}
+              className="header-input header-input-short"
             />
           )}
 
@@ -108,15 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
               type="number" 
               value={knapCapacity} 
               onChange={(e) => setKnapCapacity(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
-              style={{ 
-                padding: '0.5rem 1rem', 
-                borderRadius: '9999px', 
-                width: '80px',
-                backgroundColor: 'var(--color-bg-tertiary)',
-                color: 'var(--color-text-primary)',
-                border: '1px solid var(--color-border-subtle)',
-                outline: 'none',
-              }}
+              className="header-input header-input-short"
             />
           )}
 
@@ -127,54 +92,30 @@ export const Header: React.FC<HeaderProps> = ({
                 value={lcsS1} 
                 onChange={(e) => setLcsS1(e.target.value.substring(0, 12).toUpperCase())}
                 placeholder="S1"
-                style={{ 
-                  padding: '0.5rem 1rem', 
-                  borderRadius: '9999px', 
-                  width: '90px',
-                  backgroundColor: 'var(--color-bg-tertiary)',
-                  color: 'var(--color-text-primary)',
-                  border: '1px solid var(--color-border-subtle)',
-                  outline: 'none',
-                }}
+                className="header-input header-input-medium"
               />
               <input 
                 type="text" 
                 value={lcsS2} 
                 onChange={(e) => setLcsS2(e.target.value.substring(0, 12).toUpperCase())}
                 placeholder="S2"
-                style={{ 
-                  padding: '0.5rem 1rem', 
-                  borderRadius: '9999px', 
-                  width: '90px',
-                  backgroundColor: 'var(--color-bg-tertiary)',
-                  color: 'var(--color-text-primary)',
-                  border: '1px solid var(--color-border-subtle)',
-                  outline: 'none',
-                }}
+                className="header-input header-input-medium"
               />
             </>
           )}
 
           {algo === 'mcm' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <div className="header-input-wrapper">
               <input
                 type="text"
                 value={mcmDimensions}
                 onChange={(e) => setMcmDimensions(e.target.value)}
                 placeholder="10,30,5,60"
                 aria-invalid={!!mcmValidationError}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '9999px',
-                  width: '150px',
-                  backgroundColor: 'var(--color-bg-tertiary)',
-                  color: 'var(--color-text-primary)',
-                  border: `1px solid ${mcmValidationError ? 'var(--color-error)' : 'var(--color-border-subtle)'}`,
-                  outline: 'none',
-                }}
+                className={`header-input header-input-long ${mcmValidationError ? 'header-input-error' : ''}`}
               />
               {mcmValidationError && (
-                <span style={{ color: 'var(--color-error)', fontSize: '0.72rem', maxWidth: '220px' }}>
+                <span className="header-input-error-msg">
                   {mcmValidationError}
                 </span>
               )}
@@ -182,25 +123,17 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {algo === 'lis' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <div className="header-input-wrapper">
               <input
                 type="text"
                 value={lisArray}
                 onChange={(e) => setLisArray(e.target.value)}
                 placeholder="10,9,2,5,3,7,101,18"
                 aria-invalid={!!lisValidationError}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '9999px',
-                  width: '240px',
-                  backgroundColor: 'var(--color-bg-tertiary)',
-                  color: 'var(--color-text-primary)',
-                  border: `1px solid ${lisValidationError ? 'var(--color-error)' : 'var(--color-border-subtle)'}`,
-                  outline: 'none',
-                }}
+                className={`header-input header-input-xl ${lisValidationError ? 'header-input-error' : ''}`}
               />
               {lisValidationError && (
-                <span style={{ color: 'var(--color-error)', fontSize: '0.72rem', maxWidth: '260px' }}>
+                <span className="header-input-error-msg">
                   {lisValidationError}
                 </span>
               )}
@@ -208,55 +141,38 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        <div style={{ 
-          display: 'flex', 
-          backgroundColor: 'var(--color-bg-tertiary)', 
-          borderRadius: '9999px', 
-          padding: '4px',
-          border: '1px solid var(--color-border)' 
-        }}>
+        <div className="app-header-section app-header-mode" data-tour="step-2">
           <button 
             onClick={() => { if (mode !== 'single') toggleMode() }}
-            style={{
-              padding: '0.4rem 1rem',
-              backgroundColor: mode === 'single' ? 'var(--color-accent-primary)' : 'transparent',
-              color: mode === 'single' ? '#fff' : 'var(--color-text-secondary)',
-              border: 'none',
-              borderRadius: '9999px',
-              fontWeight: mode === 'single' ? 'bold' : 'normal',
-            }}
+            className={`mode-btn ${mode === 'single' ? 'mode-btn-active' : ''}`}
           >
             Single
           </button>
           <button 
             title={algo === 'lis' ? 'Compare brute force recursion, O(n^2) DP, and O(n log n) tails.' : undefined}
             onClick={() => { if (mode !== 'comparison') toggleMode() }}
-            style={{
-              padding: '0.4rem 1rem',
-              backgroundColor: mode === 'comparison' ? 'var(--color-accent-primary)' : 'transparent',
-              color: mode === 'comparison' ? '#fff' : 'var(--color-text-secondary)',
-              border: 'none',
-              borderRadius: '9999px',
-              fontWeight: mode === 'comparison' ? 'bold' : 'normal',
-            }}
+            className={`mode-btn ${mode === 'comparison' ? 'mode-btn-active' : ''}`}
           >
             Compare
           </button>
         </div>
 
-        <button 
-          onClick={() => setLearningMode(!learningMode)}
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: learningMode ? 'var(--color-success)' : 'var(--color-bg-tertiary)',
-            color: learningMode ? '#fff' : 'var(--color-text-primary)',
-            border: '1px solid var(--color-border-subtle)',
-            borderRadius: '9999px',
-            fontWeight: 'bold',
-          }}
-        >
-          {learningMode ? 'Learning On' : 'Learning Off'}
-        </button>
+        <div className="app-header-section app-header-learning">
+          <button 
+            data-tour="step-4"
+            onClick={() => setLearningMode(!learningMode)}
+            className={`learning-btn ${learningMode ? 'learning-btn-on' : 'learning-btn-off'}`}
+          >
+            {learningMode ? 'Learning On' : 'Learning Off'}
+          </button>
+
+          <button 
+            onClick={onStartTutorial}
+            className="tutorial-header-btn"
+          >
+            Tutorial
+          </button>
+        </div>
       </div>
     </header>
   );

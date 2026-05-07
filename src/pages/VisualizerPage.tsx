@@ -11,6 +11,7 @@ import { ResizableLayout } from '../components/layout/ResizableLayout';
 import { VisualPanel } from '../components/panels/VisualPanel';
 import { CodePanel } from '../components/panels/CodePanel';
 import { ComparisonPanel } from '../components/panels/ComparisonPanel';
+import { TutorialOverlay, type TutorialStep } from '../components/tutorial/TutorialOverlay';
 import { MCMCompareView } from '../components/compare/mcm/MCMCompareView';
 import { createMCMCompareTimeline } from '../components/compare/mcm/mcmCompareData';
 import { LISCompareView } from '../components/compare/lis/LISCompareView';
@@ -137,6 +138,7 @@ function parseLISArray(raw: string): { nums: number[]; error: string | null } {
 export const VisualizerPage: React.FC = () => {
   const [mode, setMode] = useState<Mode>('single');
   const [learningMode, setLearningMode] = useState(() => readStoredValue('dpstudio:learningMode') === 'true');
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [algo, setAlgo] = useState<AlgorithmSelection>(() => readStoredAlgorithm());
   const [fibN, setFibN] = useState(() => readQueryNumber('n', 5));
   const [knapCapacity, setKnapCapacity] = useState(() => readQueryNumber('capacity', 5));
@@ -228,6 +230,19 @@ export const VisualizerPage: React.FC = () => {
   useEffect(() => {
     window.localStorage.setItem('dpstudio:preferredSpeed', speed);
   }, [speed]);
+
+  useEffect(() => {
+    const tutorialSeen = readStoredValue('dpstudio:tutorialSeen');
+    if (!tutorialSeen) {
+      // Small delay to allow layout to settle
+      setTimeout(() => setIsTutorialOpen(true), 500);
+    }
+  }, []);
+
+  const handleCloseTutorial = () => {
+    setIsTutorialOpen(false);
+    window.localStorage.setItem('dpstudio:tutorialSeen', 'true');
+  };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -551,6 +566,7 @@ export const VisualizerPage: React.FC = () => {
           toggleMode={toggleMode}
           learningMode={learningMode}
           setLearningMode={setLearningMode}
+          onStartTutorial={() => setIsTutorialOpen(true)}
         />
         <div style={{ padding: '2rem', color: 'var(--color-text-primary)' }}>{validationError}</div>
       </MainLayout>
@@ -566,6 +582,15 @@ export const VisualizerPage: React.FC = () => {
   if (!currentTabStep) {
     return <div style={{ padding: '2rem', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-bg-primary)', height: '100vh' }}>Loading...</div>;
   }
+
+  const tutorialSteps: TutorialStep[] = [
+    { targetId: 'step-1', title: 'Algorithm Selector', description: 'Choose from different DP algorithms and customize their inputs.' },
+    { targetId: 'step-2', title: 'Single vs Compare Mode', description: 'Single mode focuses on one approach. Compare mode lets you analyze multiple approaches side-by-side.' },
+    { targetId: 'step-3', title: 'Playback Controls', description: 'Control the visualization playback. You can play, pause, step forward/backward, and adjust speed.' },
+    { targetId: 'step-4', title: 'Learning Mode', description: 'Enable contextual explanations, DP insights, and detailed state reasoning during playback.' },
+    { targetId: 'step-5', title: 'Visualization Area', description: 'Watch the algorithm unfold visually with recursion trees, DP tables, and state transitions.' },
+    { targetId: 'step-6', title: 'Code Panel', description: 'Follow along with synchronized code highlighting that maps directly to the visualization.' }
+  ];
 
   return (
     <MainLayout>
@@ -590,6 +615,7 @@ export const VisualizerPage: React.FC = () => {
         toggleMode={toggleMode}
         learningMode={learningMode}
         setLearningMode={setLearningMode}
+        onStartTutorial={() => setIsTutorialOpen(true)}
       />
       
       <Toolbar 
@@ -608,47 +634,61 @@ export const VisualizerPage: React.FC = () => {
         {effectiveMode === 'single' ? (
           <ResizableLayout
             leftPanel={
-              <VisualPanel 
-                step={currentTabStep} 
-                learningMode={learningMode} 
-                renderExplanation={renderExplanation}
-              />
+              <div data-tour="step-5" style={{ height: '100%' }}>
+                <VisualPanel 
+                  step={currentTabStep} 
+                  learningMode={learningMode} 
+                  renderExplanation={renderExplanation}
+                />
+              </div>
             }
             rightPanel={
-              <CodePanel 
-                code={uiRegistry[algo]?.code?.tabulation || []} 
-                activeLine={currentTabStep.codeReference?.lineNumber || 1} 
-              />
+              <div data-tour="step-6" style={{ height: '100%' }}>
+                <CodePanel 
+                  code={uiRegistry[algo]?.code?.tabulation || []} 
+                  activeLine={currentTabStep.codeReference?.lineNumber || 1} 
+                />
+              </div>
             }
           />
-        ) : algo === 'mcm' && mcmCompareTimeline ? (
-          <MCMCompareView
-            timeline={mcmCompareTimeline}
-            currentStepIndex={currentStepIndex}
-            speed={speed}
-          />
-        ) : algo === 'lis' && lisCompareTimeline ? (
-          <LISCompareView
-            timeline={lisCompareTimeline}
-            currentStepIndex={currentStepIndex}
-            speed={speed}
-            learningMode={learningMode}
-            pause={pause}
-          />
         ) : (
-          <div style={{ padding: '0.5rem', height: '100%', overflow: 'hidden' }}>
-            <ComparisonPanel 
-              leftStep={memoizationSteps[Math.min(currentStepIndex, Math.max(0, memoizationSteps.length - 1))]!}
-              rightStep={tabulationSteps[Math.min(currentStepIndex, Math.max(0, tabulationSteps.length - 1))]!}
-              leftCode={uiRegistry[algo]?.code?.memoization || []}
-              rightCode={uiRegistry[algo]?.code?.tabulation || []}
-              learningMode={learningMode}
-              algo={algo}
-              renderExplanation={renderExplanation}
-            />
+          <div data-tour="step-5" style={{ height: '100%', width: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {algo === 'mcm' && mcmCompareTimeline ? (
+              <MCMCompareView
+                timeline={mcmCompareTimeline}
+                currentStepIndex={currentStepIndex}
+                speed={speed}
+              />
+            ) : algo === 'lis' && lisCompareTimeline ? (
+              <LISCompareView
+                timeline={lisCompareTimeline}
+                currentStepIndex={currentStepIndex}
+                speed={speed}
+                learningMode={learningMode}
+                pause={pause}
+              />
+            ) : (
+              <div style={{ padding: '0.5rem', height: '100%', overflow: 'hidden' }}>
+                <ComparisonPanel 
+                  leftStep={memoizationSteps[Math.min(currentStepIndex, Math.max(0, memoizationSteps.length - 1))]!}
+                  rightStep={tabulationSteps[Math.min(currentStepIndex, Math.max(0, tabulationSteps.length - 1))]!}
+                  leftCode={uiRegistry[algo]?.code?.memoization || []}
+                  rightCode={uiRegistry[algo]?.code?.tabulation || []}
+                  learningMode={learningMode}
+                  algo={algo}
+                  renderExplanation={renderExplanation}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      <TutorialOverlay 
+        isOpen={isTutorialOpen} 
+        onClose={handleCloseTutorial} 
+        steps={tutorialSteps} 
+      />
     </MainLayout>
   );
 };
