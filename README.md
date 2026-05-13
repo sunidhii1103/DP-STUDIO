@@ -23,7 +23,7 @@ An interactive dynamic programming visualization platform that transforms abstra
 
 # 🌐 Live Demo
 
-🚀 [Launch DP Studio](dp-studio-604s65eyk-sunidhii1103s-projects.vercel.app)
+🚀 [Launch DP Studio](dp-studio.vercel.app)
 
 ---
 
