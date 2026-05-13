@@ -1896,7 +1896,7 @@ button:disabled {
 /* Primary CTA button */
 .cta-btn {
   padding: 15px 34px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-weight: 700;
   font-size: 1rem;
   letter-spacing: 0.02em;
@@ -2234,21 +2234,23 @@ body::before {
 .hero-title {
   font-size: clamp(2.5rem, 5vw + 1rem, 4.5rem);
   font-weight: 800;
-  margin: 0 0 1.2rem 0;
+  margin: 0 auto 1.2rem auto;
   line-height: 1.1;
+  max-width: 800px;
   background: linear-gradient(to bottom right, #ffffff 30%, #93c5fd 100%);
+  filter: drop-shadow(0 0 24px rgba(59, 130, 246, 0.25));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   color: transparent;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   padding-bottom: 0.2rem;
 }
 
 .hero-subtitle {
   font-size: clamp(1.1rem, 2vw, 1.35rem);
-  color: #e2e8f0;
-  max-width: 640px;
+  color: #f1f5f9;
+  max-width: 600px;
   margin: 0 auto 1.2rem auto;
   line-height: 1.6;
   font-weight: 500;
@@ -2256,10 +2258,23 @@ body::before {
 
 .hero-description {
   font-size: clamp(0.95rem, 1.5vw, 1.15rem);
-  color: #94a3b8;
-  max-width: 600px;
+  color: #cbd5e1;
+  max-width: 560px;
   margin: 0 auto 2.5rem auto;
   line-height: 1.6;
+}
+
+.hero-content-wrapper {
+  animation: heroContentFadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+@keyframes heroContentFadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Hero panel — stronger glassmorphism + floating */
@@ -2347,34 +2362,47 @@ body::before {
   color: inherit;
   cursor: pointer;
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--algo-accent) 18%, transparent), transparent 52%),
-    rgba(17,24,39,0.72);
-  backdrop-filter: blur(10px);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--algo-accent) 15%, transparent), transparent 60%),
+    linear-gradient(160deg, rgba(15, 23, 42, 0.8), rgba(11, 17, 32, 0.95));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 1.25rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 
+    0 0 15px color-mix(in srgb, var(--algo-accent) 6%, transparent), 
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 20px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.2rem;
   overflow: hidden;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, background 0.3s ease;
 }
 
 .algo-card::after {
   content: "";
   position: absolute;
-  inset: auto 1rem 0 1rem;
+  inset: auto 0 0 0;
   height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, transparent, var(--algo-accent), transparent);
-  opacity: 0.68;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--algo-accent) 70%, transparent), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .algo-card:hover {
-  transform: translateY(-6px) scale(1.015);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.5), 0 0 24px color-mix(in srgb, var(--algo-accent) 22%, transparent);
-  border-color: color-mix(in srgb, var(--algo-accent) 45%, rgba(255,255,255,0.08));
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 
+    0 0 30px color-mix(in srgb, var(--algo-accent) 15%, transparent), 
+    0 24px 50px rgba(0, 0, 0, 0.6), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: color-mix(in srgb, var(--algo-accent) 40%, rgba(255, 255, 255, 0.1));
+}
+
+.algo-card:hover::after {
+  opacity: 1;
 }
 
 .algo-card:focus-visible {
@@ -2382,12 +2410,12 @@ body::before {
   outline-offset: 3px;
 }
 
-.algo-card--fibonacci { --algo-accent: #22d3ee; }
-.algo-card--lis { --algo-accent: #2dd4bf; }
-.algo-card--lcs { --algo-accent: #60a5fa; }
-.algo-card--edit-distance { --algo-accent: #c084fc; }
-.algo-card--mcm { --algo-accent: #f59e0b; }
-.algo-card--knapsack { --algo-accent: #34d399; }
+.algo-card--fibonacci { --algo-accent: #06b6d4; } /* cyan-blue */
+.algo-card--lis { --algo-accent: #6366f1; } /* indigo-blue */
+.algo-card--lcs { --algo-accent: #0d9488; } /* teal-blue */
+.algo-card--edit-distance { --algo-accent: #6366f1; } /* indigo-blue */
+.algo-card--mcm { --algo-accent: #06b6d4; } /* cyan-blue */
+.algo-card--knapsack { --algo-accent: #0d9488; } /* teal-blue */
 
 .algo-card-topline,
 .algo-badges {
@@ -2417,10 +2445,13 @@ body::before {
   border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 850;
-  color: color-mix(in srgb, var(--algo-accent) 70%, white);
-  background: color-mix(in srgb, var(--algo-accent) 10%, rgba(255,255,255,0.04));
-  border: 1px solid color-mix(in srgb, var(--algo-accent) 22%, rgba(255,255,255,0.08));
+  color: color-mix(in srgb, var(--algo-accent) 80%, white);
+  background: color-mix(in srgb, var(--algo-accent) 15%, rgba(255,255,255,0.02));
+  border: 1px solid color-mix(in srgb, var(--algo-accent) 30%, rgba(255,255,255,0.06));
   padding: 0.28rem 0.58rem;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--algo-accent) 12%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .algo-card h3 {
