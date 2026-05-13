@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useInView } from '../hooks/useInView';
 import { algorithmShowcase } from '../constants/algorithmShowcase';
 import type { AlgorithmShowcaseItem } from '../constants/algorithmShowcase';
+import { Navbar } from '../components/navbar/Navbar';
 
 interface FeatureCardProps {
   children: React.ReactNode;
@@ -63,6 +64,26 @@ export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const loaded = true;
 
+  /* ── Handle cross-page scrollTo query param (e.g. from About button) ──── */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const scrollTarget = params.get('scrollTo');
+    if (scrollTarget) {
+      // Small delay to let the page render fully before scrolling
+      const timer = setTimeout(() => {
+        const el = document.getElementById(scrollTarget);
+        if (el) {
+          const navbarHeight = 64;
+          const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+        // Clean the URL without triggering navigation
+        window.history.replaceState({}, '', '/');
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   const launchAlgorithm = (item: AlgorithmShowcaseItem) => {
     const params = new URLSearchParams({ algo: item.id, ...item.launchParams });
     navigate(`/visualizer?${params.toString()}`);
@@ -74,26 +95,12 @@ export const LandingPage: React.FC = () => {
       {/* Hero Background Glow */}
       <div className="hero-bg"></div>
 
-      {/* Navbar */}
-      <header style={{ position: 'relative', zIndex: 10, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', padding: '1.5rem 0', alignItems: 'center' }}>
-          <div className="logo logo-hover" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
-            <img src="/logo.png" alt="DP Studio" style={{ width: '32px', height: '32px', borderRadius: '4px' }} />
-            <span style={{ fontSize: '1.25rem' }}>DP Studio</span>
-          </div>
-          <button 
-            onClick={() => navigate('/visualizer')}
-            className="launch-btn"
-            style={{ padding: '0.6rem 1.5rem', color: 'white', borderRadius: '8px', fontWeight: 'bold' }}
-          >
-            Launch App
-          </button>
-        </div>
-      </header>
+      {/* Premium Navbar */}
+      <Navbar />
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', position: 'relative', zIndex: 10 }}>
         
-        {/* 2. Hero (+ Demo, Glass Panel) */}
+        {/* Hero (+ Demo, Glass Panel) */}
         <section className="section hero-section">
           <div className="container" style={{ textAlign: 'center', opacity: loaded ? 1 : 0, transform: loaded ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.8s ease' }}>
             <h1 className="hero-title" style={{ fontSize: '4rem', fontWeight: 800, margin: '0 0 1.5rem 0' }}>
@@ -123,7 +130,7 @@ export const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 3. Features (Concise) */}
+        {/* Features (Concise) */}
         <section className="section">
           <div className="container" style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
             <FeatureCard delay={0}>
@@ -141,7 +148,7 @@ export const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 4. Algorithm Showcase */}
+        {/* Algorithm Showcase */}
         <FadeInSection>
           <section className="section algo-section">
             <div className="container">
@@ -172,7 +179,7 @@ export const LandingPage: React.FC = () => {
           </section>
         </FadeInSection>
 
-        {/* 5. How it works */}
+        {/* How it works */}
         <FadeInSection>
           <section className="section how-section">
             <div className="container">
@@ -207,7 +214,39 @@ export const LandingPage: React.FC = () => {
           </section>
         </FadeInSection>
 
-        {/* 6. Final CTA */}
+        {/* About Section */}
+        <FadeInSection>
+          <section className="section about-section" id="about-dp-studio">
+            <div className="container">
+              <h2 style={{ fontSize: '2.5rem', textAlign: 'center', margin: '0 0 1rem 0' }}>About DP Studio</h2>
+              <p style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 3rem auto', fontSize: '1.1rem', color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
+                An interactive educational platform for mastering Dynamic Programming through real-time visualization, live code sync, and step-driven exploration.
+              </p>
+              <div className="container" style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'center' }}>
+                <FeatureCard delay={0}>
+                  <h3 style={{ color: '#22d3ee', margin: '0 0 0.75rem 0', fontSize: '1.15rem' }}>🎓 Educational Purpose</h3>
+                  <p style={{ color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.55, fontSize: '0.95rem' }}>
+                    Designed for students, educators, and competitive programmers to build deep intuition for DP paradigms through interactive, visual learning.
+                  </p>
+                </FeatureCard>
+                <FeatureCard delay={0.15}>
+                  <h3 style={{ color: '#34d399', margin: '0 0 0.75rem 0', fontSize: '1.15rem' }}>📊 6 Algorithms</h3>
+                  <p style={{ color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.55, fontSize: '0.95rem' }}>
+                    Fibonacci, 0/1 Knapsack, LIS, MCM, LCS, and Edit Distance — covering 1D, 2D, String, Sequence, and Partition DP.
+                  </p>
+                </FeatureCard>
+                <FeatureCard delay={0.3}>
+                  <h3 style={{ color: '#c084fc', margin: '0 0 0.75rem 0', fontSize: '1.15rem' }}>⚡ Interactive Learning</h3>
+                  <p style={{ color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.55, fontSize: '0.95rem' }}>
+                    Step-by-step execution, side-by-side approach comparison, synchronized code highlighting, and DP table animations.
+                  </p>
+                </FeatureCard>
+              </div>
+            </div>
+          </section>
+        </FadeInSection>
+
+        {/* Final CTA */}
         <FadeInSection>
           <section className="section cta-section">
             <div className="container final-cta-container" style={{ textAlign: 'center' }}>

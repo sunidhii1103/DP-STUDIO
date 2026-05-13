@@ -136,7 +136,11 @@ function parseLISArray(raw: string): { nums: number[]; error: string | null } {
 }
 
 export const VisualizerPage: React.FC = () => {
-  const [mode, setMode] = useState<Mode>('single');
+  const [mode, setMode] = useState<Mode>(() => {
+    if (typeof window === 'undefined') return 'single';
+    const queryMode = new URLSearchParams(window.location.search).get('mode');
+    return queryMode === 'comparison' ? 'comparison' : 'single';
+  });
   const [learningMode, setLearningMode] = useState(() => readStoredValue('dpstudio:learningMode') === 'true');
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [algo, setAlgo] = useState<AlgorithmSelection>(() => readStoredAlgorithm());
