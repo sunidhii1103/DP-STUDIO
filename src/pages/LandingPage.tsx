@@ -51,10 +51,10 @@ const InteractiveDemo = () => {
   }, []);
 
   return (
-    <div className="demo-container w-full max-w-full overflow-hidden !px-2 sm:!px-4 !py-3 sm:!py-4">
-      <div className="flex gap-2 sm:gap-3 justify-start md:justify-center overflow-x-auto min-w-0 pb-2 sm:pb-0 scrollbar-hide">
+    <div className="demo-container">
+      <div className="demo-track">
         {demoSteps[stepIndex]!.table.map((val, idx) => (
-          <div key={idx} className={`demo-cell flex-shrink-0 !w-[36px] sm:!w-[42px] !h-[36px] sm:!h-[42px] !text-sm sm:!text-[0.95rem] ${idx === demoSteps[stepIndex]!.active ? 'active' : ''}`}>
+          <div key={idx} className={`demo-cell ${idx === demoSteps[stepIndex]!.active ? 'active' : ''}`}>
             {val}
           </div>
         ))}
@@ -116,8 +116,8 @@ export const LandingPage: React.FC = () => {
               Stop tracing recursive trees on paper. DP Studio provides interactive, step-by-step visualizations of algorithms with live code synchronization.
             </p>
             
-            <div className="hero-panel w-full max-w-full md:max-w-max mx-auto mb-10 overflow-hidden !px-4 !py-6 sm:!px-8 sm:!py-8" style={{ display: 'block' }}>
-              <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Live Execution Demo</h3>
+            <div className="hero-panel hero-demo-panel">
+              <h3 className="hero-demo-title">Live Execution Demo</h3>
               <InteractiveDemo />
             </div>
             
