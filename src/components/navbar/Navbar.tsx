@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { algorithmShowcase } from '../../constants/algorithmShowcase';
 import type { AlgorithmShowcaseItem } from '../../constants/algorithmShowcase';
+import './Navbar.css';
 
 /* ── Algorithm dropdown items with category badges ────────────────────────── */
 const algorithmItems: {

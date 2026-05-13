@@ -8,15 +8,16 @@ import { Navbar } from '../components/navbar/Navbar';
 interface FeatureCardProps {
   children: React.ReactNode;
   delay?: number;
+  className?: string;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ children, delay = 0 }) => {
+const FeatureCard: React.FC<FeatureCardProps> = ({ children, delay = 0, className = "" }) => {
   const [ref, isVisible] = useInView();
 
   return (
     <div
       ref={ref}
-      className={`panel feature-card ${isVisible ? "show" : ""}`}
+      className={`panel feature-card ${isVisible ? "show" : ""} ${className}`}
       style={{ transitionDelay: `${delay}s`, flex: '1 1 300px', padding: '2rem', textAlign: 'left' }}
     >
       {children}
@@ -103,13 +104,13 @@ export const LandingPage: React.FC = () => {
         {/* Hero (+ Demo, Glass Panel) */}
         <section className="section hero-section">
           <div className="container" style={{ textAlign: 'center', opacity: loaded ? 1 : 0, transform: loaded ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.8s ease' }}>
-            <h1 className="hero-title" style={{ fontSize: '4rem', fontWeight: 800, margin: '0 0 1.5rem 0' }}>
+            <h1 className="hero-title">
               Master Dynamic Programming Visually
             </h1>
-            <p style={{ fontSize: '1.25rem', color: 'var(--color-text-secondary)', maxWidth: '700px', margin: '0 auto 1.5rem auto', lineHeight: 1.6 }}>
+            <p className="hero-subtitle">
               Built for learning, debugging, and mastering Dynamic Programming.
             </p>
-            <p style={{ fontSize: '1.1rem', color: 'var(--color-text-muted)', maxWidth: '650px', margin: '0 auto 2.5rem auto', lineHeight: 1.6 }}>
+            <p className="hero-description">
               Stop tracing recursive trees on paper. DP Studio provides interactive, step-by-step visualizations of algorithms with live code synchronization.
             </p>
             
@@ -224,19 +225,25 @@ export const LandingPage: React.FC = () => {
               </p>
               <div className="container" style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'center' }}>
                 <FeatureCard delay={0}>
-                  <h3 style={{ color: '#22d3ee', margin: '0 0 0.75rem 0', fontSize: '1.15rem' }}>🎓 Educational Purpose</h3>
+                  <h3 style={{ color: '#22d3ee', margin: '0 0 0.75rem 0', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.6))' }}>🎓</span> Educational Purpose
+                  </h3>
                   <p style={{ color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.55, fontSize: '0.95rem' }}>
                     Designed for students, educators, and competitive programmers to build deep intuition for DP paradigms through interactive, visual learning.
                   </p>
                 </FeatureCard>
-                <FeatureCard delay={0.15}>
-                  <h3 style={{ color: '#34d399', margin: '0 0 0.75rem 0', fontSize: '1.15rem' }}>📊 6 Algorithms</h3>
+                <FeatureCard delay={0.15} className="feature-card--highlighted">
+                  <h3 style={{ color: '#34d399', margin: '0 0 0.75rem 0', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ filter: 'drop-shadow(0 0 8px rgba(52,211,153,0.6))' }}>📊</span> 6 Algorithms
+                  </h3>
                   <p style={{ color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.55, fontSize: '0.95rem' }}>
                     Fibonacci, 0/1 Knapsack, LIS, MCM, LCS, and Edit Distance — covering 1D, 2D, String, Sequence, and Partition DP.
                   </p>
                 </FeatureCard>
                 <FeatureCard delay={0.3}>
-                  <h3 style={{ color: '#c084fc', margin: '0 0 0.75rem 0', fontSize: '1.15rem' }}>⚡ Interactive Learning</h3>
+                  <h3 style={{ color: '#c084fc', margin: '0 0 0.75rem 0', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ filter: 'drop-shadow(0 0 8px rgba(192,132,252,0.6))' }}>⚡</span> Interactive Learning
+                  </h3>
                   <p style={{ color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.55, fontSize: '0.95rem' }}>
                     Step-by-step execution, side-by-side approach comparison, synchronized code highlighting, and DP table animations.
                   </p>
