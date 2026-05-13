@@ -42,21 +42,21 @@ export function getLCSExplanationTemplates(): ExplanationTemplateMap {
       header: (ctx: StepContext) => `Choose Top Cell: dp[${Number(ctx.i)-1}][${ctx.j}]`,
       recurrence: () => 'dp[i-1][j] >= dp[i][j-1]',
       substituted: (ctx: StepContext) => `${ctx.valTop} >= ${ctx.valLeft}`,
-      decision: () => `Excluding '${ctx.char1}' yields a longer subsequence than excluding '${ctx.char2}'.`,
+      decision: (ctx: StepContext) => `Excluding '${ctx.char1}' yields a longer subsequence than excluding '${ctx.char2}'.`,
     },
 
     choose_left: {
       header: (ctx: StepContext) => `Choose Left Cell: dp[${ctx.i}][${Number(ctx.j)-1}]`,
       recurrence: () => 'dp[i][j-1] > dp[i-1][j]',
       substituted: (ctx: StepContext) => `${ctx.valLeft} > ${ctx.valTop}`,
-      decision: () => `Excluding '${ctx.char2}' yields a longer subsequence than excluding '${ctx.char1}'.`,
+      decision: (ctx: StepContext) => `Excluding '${ctx.char2}' yields a longer subsequence than excluding '${ctx.char1}'.`,
     },
 
     result: {
       header: (ctx: StepContext) => `Final Result: ${ctx.result}`,
       recurrence: () => 'dp[n][m]',
       substituted: (ctx: StepContext) => `dp[${ctx.n}][${ctx.m}] = ${ctx.result}`,
-      decision: () => `The length of the Longest Common Subsequence is ${ctx.result}.`,
+      decision: (ctx: StepContext) => `The length of the Longest Common Subsequence is ${ctx.result}.`,
     },
 
     backtrack_match: {
@@ -68,14 +68,14 @@ export function getLCSExplanationTemplates(): ExplanationTemplateMap {
     },
 
     backtrack_move_top: {
-      header: (ctx: StepContext) => `Reconstruct Move Top`,
+      header: () => `Reconstruct Move Top`,
       recurrence: () => 'dp[i-1][j] >= dp[i][j-1] => Move i--',
       substituted: (ctx: StepContext) => `dp[${Number(ctx.i)-1}][${ctx.j}] >= dp[${ctx.i}][${Number(ctx.j)-1}] (${ctx.valTop} >= ${ctx.valLeft})`,
       decision: () => `Top cell is greater or equal, meaning optimal path came from above.`,
     },
 
     backtrack_move_left: {
-      header: (ctx: StepContext) => `Reconstruct Move Left`,
+      header: () => `Reconstruct Move Left`,
       recurrence: () => 'dp[i][j-1] > dp[i-1][j] => Move j--',
       substituted: (ctx: StepContext) => `dp[${ctx.i}][${Number(ctx.j)-1}] > dp[${Number(ctx.i)-1}][${ctx.j}] (${ctx.valLeft} > ${ctx.valTop})`,
       decision: () => `Left cell is greater, meaning optimal path came from left.`,

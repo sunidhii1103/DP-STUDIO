@@ -17,7 +17,7 @@ export function generateKnapsackTabulation(input: AlgorithmInput): Step[] {
     Array.from({ length: capacity + 1 }, () => ({ value: null, state: 'idle' as const }))
   );
 
-  const rowLabels = ['0', ...items.map(item => item.label)];
+  const rowLabels = ['0', ...(items ? items.map(item => item.label) : [])];
   const colLabels = Array.from({ length: capacity + 1 }, (_, w) => String(w));
 
   function snapshot(): TableSnapshot2D {
@@ -59,7 +59,7 @@ export function generateKnapsackTabulation(input: AlgorithmInput): Step[] {
 
   // Handle edge cases: empty items or 0 capacity
   if (n === 0 || capacity <= 0) {
-    cells[0][0] = { value: 0, state: 'result' };
+    cells[0]![0]! = { value: 0, state: 'result' };
     steps.push(createStep({
       operation: 'result',
       activeIndices: { i: 0, j: 0 },
@@ -78,7 +78,7 @@ export function generateKnapsackTabulation(input: AlgorithmInput): Step[] {
   for (let i = 0; i <= n; i++) {
     for (let w = 0; w <= capacity; w++) {
       if (i === 0 || w === 0) {
-        cells[i][w] = { value: 0, state: 'computed' };
+        cells[i]![w]! = { value: 0, state: 'computed' };
       }
     }
   }
@@ -97,30 +97,30 @@ export function generateKnapsackTabulation(input: AlgorithmInput): Step[] {
   stepIndex++;
 
   for (let i = 1; i <= n; i++) {
-    const item = items[i - 1];
+    const item = items![i - 1]!;
     for (let w = 1; w <= capacity; w++) {
       const depCells = cloneCells2D(cells);
       const isIncluded = item.weight <= w;
       
-      let valExclude = cells[i - 1][w].value!;
+      let valExclude = cells[i - 1]![w]!.value as number;
       let valInclude = 0;
       let dependencyIndices = [{ i: i - 1, j: w }];
       
-      depCells[i - 1][w] = { ...depCells[i - 1][w], state: 'dependency' };
+      depCells[i - 1]![w]! = { ...depCells[i - 1]![w]!, state: 'dependency' };
       
       let explanationVars: Record<string, any> = {
         i, w, weight: item.weight, value: item.value, label: item.label, valExclude
       };
 
       if (isIncluded) {
-        valInclude = item.value + cells[i - 1][w - item.weight].value!;
+        valInclude = item.value + (cells[i - 1]![w - item.weight]!.value as number);
         dependencyIndices.push({ i: i - 1, j: w - item.weight });
-        depCells[i - 1][w - item.weight] = { ...depCells[i - 1][w - item.weight], state: 'dependency' };
+        depCells[i - 1]![w - item.weight]! = { ...depCells[i - 1]![w - item.weight]!, state: 'dependency' };
         explanationVars.valInclude = valInclude;
       }
       
       const result = isIncluded ? Math.max(valExclude, valInclude) : valExclude;
-      depCells[i][w] = { value: result, state: 'active' };
+      depCells[i]![w]! = { value: result, state: 'active' };
 
       steps.push(createStep({
         operation: 'compute',
@@ -130,24 +130,24 @@ export function generateKnapsackTabulation(input: AlgorithmInput): Step[] {
         explanation: {
           operationType: 'compute',
           conceptNoteType: 'optimal_substructure',
-          variables: { ...explanationVars, result, isIncluded }
+          variables: { ...explanationVars, result, isIncluded: String(isIncluded) }
         },
         codeReference: { language: 'javascript', lineNumber: isIncluded ? 7 : 9 },
         milestoneId: `compute_${i}_${w}`
       }));
       stepIndex++;
       
-      cells[i][w] = { value: result, state: 'computed' };
+      cells[i]![w]! = { value: result, state: 'computed' };
     }
   }
 
-  cells[n][capacity] = { ...cells[n][capacity], state: 'result' };
+  cells[n]![capacity]! = { ...cells[n]![capacity]!, state: 'result' };
   steps.push(createStep({
     operation: 'result',
     activeIndices: { i: n, j: capacity },
     explanation: {
       operationType: 'result',
-      variables: { result: cells[n][capacity].value!, n, capacity }
+      variables: { result: cells[n]![capacity]!.value as number, n, capacity }
     },
     codeReference: { language: 'javascript', lineNumber: 13 },
     milestoneId: `result_${n}_${capacity}`

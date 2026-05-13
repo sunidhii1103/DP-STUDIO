@@ -107,8 +107,8 @@ export function generateFibonacciTabulation(input: AlgorithmInput): Step[] {
 
   // ── Steps: Fill dp[2] through dp[n] ─────────────────────────────────────
   for (let i = 2; i <= n; i++) {
-    const prev1 = cells[i - 1]?.value ?? 0;
-    const prev2 = cells[i - 2]?.value ?? 0;
+    const prev1 = (cells[i - 1]?.value as number) ?? 0;
+    const prev2 = (cells[i - 2]?.value as number) ?? 0;
     const result = prev1 + prev2;
 
     // Mark dependencies

@@ -56,6 +56,8 @@ export function generateFibonacciBruteForce(input: AlgorithmInput): Step[] {
         cacheHitsSoFar: 0,
         stackDepth,
         redundantComputesSoFar: redundantComputes,
+        operationsCount: operationCount,
+        statesStored: computedOnce.size,
       },
       ...overrides,
     };

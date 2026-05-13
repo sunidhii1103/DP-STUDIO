@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, MutableRefObject } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 
 export function useInView(threshold = 0.3): [MutableRefObject<HTMLDivElement | null>, boolean] {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -7,7 +8,7 @@ export function useInView(threshold = 0.3): [MutableRefObject<HTMLDivElement | n
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry?.isIntersecting) {
           setIsVisible(true);
           observer.disconnect(); // run only once
         }

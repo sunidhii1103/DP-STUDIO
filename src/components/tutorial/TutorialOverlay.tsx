@@ -89,7 +89,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ steps, onClose
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, currentStepIndex]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !currentStep) return null;
 
   const handleNext = () => {
     if (currentStepIndex < steps.length - 1) {

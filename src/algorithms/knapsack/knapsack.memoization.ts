@@ -11,7 +11,6 @@ export function generateKnapsackMemoization(input: AlgorithmInput): Step[] {
   const steps: Step[] = [];
   let stepIndex = 0;
   let operationCount = 0;
-  let statesStored = 0;
 
   const cells: CellState[][] = Array.from({ length: n + 1 }, () => 
     Array.from({ length: capacity + 1 }, () => ({ value: null, state: 'idle' as const }))
@@ -19,7 +18,7 @@ export function generateKnapsackMemoization(input: AlgorithmInput): Step[] {
   
   const memo: Map<string, number> = new Map();
 
-  const rowLabels = ['0', ...items.map(item => item.label)];
+  const rowLabels = ['0', ...(items ? items.map(item => item.label) : [])];
   const colLabels = Array.from({ length: capacity + 1 }, (_, w) => String(w));
 
   function snapshot(): TableSnapshot2D {
@@ -56,7 +55,7 @@ export function generateKnapsackMemoization(input: AlgorithmInput): Step[] {
     
     if (memo.has(key)) {
       const cached = memo.get(key)!;
-      cells[i][w] = { value: cached, state: 'cached' };
+      cells[i]![w]! = { value: cached, state: 'cached' };
       steps.push(createStep({
         operation: 'cache_hit',
         activeIndices: { i, j: w },
@@ -72,7 +71,7 @@ export function generateKnapsackMemoization(input: AlgorithmInput): Step[] {
     }
 
     if (i === 0 || w === 0) {
-      cells[i][w] = { value: 0, state: 'active' };
+      cells[i]![w]! = { value: 0, state: 'active' };
       steps.push(createStep({
         operation: 'initialize',
         activeIndices: { i, j: w },
@@ -85,12 +84,12 @@ export function generateKnapsackMemoization(input: AlgorithmInput): Step[] {
       }));
       stepIndex++;
       
-      cells[i][w] = { value: 0, state: 'computed' };
+      cells[i]![w]! = { value: 0, state: 'computed' };
       memo.set(key, 0);
       return 0;
     }
 
-    cells[i][w] = { value: null, state: 'active' };
+    cells[i]![w]! = { value: null, state: 'active' };
     steps.push(createStep({
       operation: 'recurse',
       activeIndices: { i, j: w },
@@ -102,7 +101,7 @@ export function generateKnapsackMemoization(input: AlgorithmInput): Step[] {
     }));
     stepIndex++;
 
-    const item = items[i - 1];
+    const item = items![i - 1]!;
     let result = 0;
     let isIncluded = item.weight <= w;
 
@@ -119,11 +118,11 @@ export function generateKnapsackMemoization(input: AlgorithmInput): Step[] {
     memo.set(key, result);
     
     const depCells = cloneCells2D(cells);
-    depCells[i - 1][w] = { ...depCells[i - 1][w], state: 'dependency' };
+    depCells[i - 1]![w]! = { ...depCells[i - 1]![w]!, state: 'dependency' };
     if (isIncluded) {
-      depCells[i - 1][w - item.weight] = { ...depCells[i - 1][w - item.weight], state: 'dependency' };
+      depCells[i - 1]![w - item.weight]! = { ...depCells[i - 1]![w - item.weight]!, state: 'dependency' };
     }
-    depCells[i][w] = { value: result, state: 'active' };
+    depCells[i]![w]! = { value: result, state: 'active' };
 
     steps.push(createStep({
       operation: 'compute',
@@ -133,12 +132,12 @@ export function generateKnapsackMemoization(input: AlgorithmInput): Step[] {
       explanation: {
         operationType: 'compute',
         conceptNoteType: 'optimal_substructure',
-        variables: { i, w, result, isIncluded, valExclude, valInclude, weight: item.weight, value: item.value, label: item.label }
+        variables: { i, w, result, isIncluded: String(isIncluded), valExclude, valInclude, weight: item.weight, value: item.value, label: item.label }
       }
     }));
     stepIndex++;
 
-    cells[i][w] = { value: result, state: 'computed' };
+    cells[i]![w]! = { value: result, state: 'computed' };
     return result;
   }
 
@@ -154,7 +153,7 @@ export function generateKnapsackMemoization(input: AlgorithmInput): Step[] {
 
   const finalValue = knapsackMemo(n, capacity);
   
-  cells[n][capacity] = { ...cells[n][capacity], state: 'result' };
+  cells[n]![capacity]! = { ...cells[n]![capacity]!, state: 'result' };
   steps.push(createStep({
     operation: 'result',
     activeIndices: { i: n, j: capacity },

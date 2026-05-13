@@ -64,52 +64,52 @@ export class LCSTabulation implements AlgorithmModule {
     };
 
     for (let i = 0; i <= n; i++) {
-      table[i][0] = { value: 0, state: 'computed' };
+      table[i]![0]! = { value: 0, state: 'computed' };
       metrics.statesStored++;
       addStep('initialize', {i, j: 0}, [], {i, j: 0}, 2);
     }
     for (let j = 1; j <= m; j++) {
-      table[0][j] = { value: 0, state: 'computed' };
+      table[0]![j]! = { value: 0, state: 'computed' };
       metrics.statesStored++;
       addStep('initialize', {i: 0, j}, [], {i: 0, j}, 3);
     }
 
     for (let i = 1; i <= n; i++) {
       for (let j = 1; j <= m; j++) {
-        table[i][j].state = 'active';
-        table[i-1][j-1].state = 'dependency';
+        table[i]![j]!.state = 'active';
+        table[i-1]![j-1]!.state = 'dependency';
         
         addStep('compare', {i, j}, [{i: i-1, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1]}, 6);
 
         if (s1[i-1] === s2[j-1]) {
-          const val = table[i-1][j-1].value as number;
-          table[i][j] = { value: val + 1, state: 'computed' };
-          table[i-1][j-1].state = 'computed';
+          const val = table[i-1]![j-1]!.value as number;
+          table[i]![j]! = { value: val + 1, state: 'computed' };
+          table[i-1]![j-1]!.state = 'computed';
           metrics.statesStored++;
           addStep('match', {i, j}, [{i: i-1, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], valDiag: val}, 7);
         } else {
-          table[i-1][j-1].state = 'computed'; // reset diag
-          table[i-1][j].state = 'dependency';
-          table[i][j-1].state = 'dependency';
+          table[i-1]![j-1]!.state = 'computed'; // reset diag
+          table[i-1]![j]!.state = 'dependency';
+          table[i]![j-1]!.state = 'dependency';
           
-          addStep('mismatch', {i, j}, [{i: i-1, j}, {i, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop: table[i-1][j].value, valLeft: table[i][j-1].value}, 9);
+          addStep('mismatch', {i, j}, [{i: i-1, j}, {i, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop: table[i-1]![j]!.value, valLeft: table[i]![j-1]!.value}, 9);
 
-          if ((table[i-1][j].value as number) >= (table[i][j-1].value as number)) {
-            table[i][j] = { value: table[i-1][j].value, state: 'computed' };
+          if ((table[i-1]![j]!.value as number) >= (table[i]![j-1]!.value as number)) {
+            table[i]![j]! = { value: table[i-1]![j]!.value, state: 'computed' };
             metrics.statesStored++;
-            addStep('choose_top', {i, j}, [{i: i-1, j}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop: table[i-1][j].value, valLeft: table[i][j-1].value}, 10);
+            addStep('choose_top', {i, j}, [{i: i-1, j}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop: table[i-1]![j]!.value, valLeft: table[i]![j-1]!.value}, 10);
           } else {
-            table[i][j] = { value: table[i][j-1].value, state: 'computed' };
+            table[i]![j]! = { value: table[i]![j-1]!.value, state: 'computed' };
             metrics.statesStored++;
-            addStep('choose_left', {i, j}, [{i, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop: table[i-1][j].value, valLeft: table[i][j-1].value}, 12);
+            addStep('choose_left', {i, j}, [{i, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop: table[i-1]![j]!.value, valLeft: table[i]![j-1]!.value}, 12);
           }
-          table[i-1][j].state = 'computed';
-          table[i][j-1].state = 'computed';
+          table[i-1]![j]!.state = 'computed';
+          table[i]![j-1]!.state = 'computed';
         }
       }
     }
 
-    addStep('result', {i: n, j: m}, [], {n, m, result: table[n][m].value}, 16);
+    addStep('result', {i: n, j: m}, [], {n, m, result: table[n]?.[m]?.value}, 16);
 
     // Backtracking
     let i = n;
@@ -117,36 +117,36 @@ export class LCSTabulation implements AlgorithmModule {
     let partialLCS = "";
     
     while (i > 0 && j > 0) {
-      table[i][j].state = 'active';
+      table[i]![j]!.state = 'active';
       addStep('compare', {i, j}, [], {i, j, char1: s1[i-1], char2: s2[j-1], partialLCS}, 19);
 
       if (s1[i-1] === s2[j-1]) {
-        table[i][j].state = 'match';
-        table[i][j].value = `${table[i][j].value} ↖`;
+        table[i]![j]!.state = 'match';
+        table[i]![j]!.value = `${table[i]![j]!.value} ↖`;
         partialLCS = s1[i-1] + partialLCS;
         addStep('backtrack_match', {i, j}, [{i: i-1, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], partialLCS}, 20);
         i--;
         j--;
       } else {
-        table[i-1][j].state = 'dependency';
-        table[i][j-1].state = 'dependency';
-        const valTop = typeof table[i-1][j].value === 'string' ? parseInt(table[i-1][j].value as string) : table[i-1][j].value as number;
-        const valLeft = typeof table[i][j-1].value === 'string' ? parseInt(table[i][j-1].value as string) : table[i][j-1].value as number;
+        table[i-1]![j]!.state = 'dependency';
+        table[i]![j-1]!.state = 'dependency';
+        const valTop = typeof table[i-1]![j]!.value === 'string' ? parseInt(table[i-1]![j]!.value as string) : table[i-1]![j]!.value as number;
+        const valLeft = typeof table[i]![j-1]!.value === 'string' ? parseInt(table[i]![j-1]!.value as string) : table[i]![j-1]!.value as number;
         
         addStep('mismatch', {i, j}, [{i: i-1, j}, {i, j: j-1}], {i, j, char1: s1[i-1], char2: s2[j-1], valTop, valLeft, partialLCS}, 22);
 
         if (valTop >= valLeft) {
-          table[i-1][j].state = 'computed';
-          table[i][j-1].state = 'computed';
-          table[i][j].state = 'path'; 
-          table[i][j].value = `${table[i][j].value} ↑`;
+          table[i-1]![j]!.state = 'computed';
+          table[i]![j-1]!.state = 'computed';
+          table[i]![j]!.state = 'path'; 
+          table[i]![j]!.value = `${table[i]![j]!.value} ↑`;
           addStep('backtrack_move_top', {i, j}, [{i: i-1, j}], {i, j, valTop, valLeft, partialLCS}, 23);
           i--;
         } else {
-          table[i-1][j].state = 'computed';
-          table[i][j-1].state = 'computed';
-          table[i][j].state = 'path';
-          table[i][j].value = `${table[i][j].value} ←`;
+          table[i-1]![j]!.state = 'computed';
+          table[i]![j-1]!.state = 'computed';
+          table[i]![j]!.state = 'path';
+          table[i]![j]!.value = `${table[i]![j]!.value} ←`;
           addStep('backtrack_move_left', {i, j}, [{i, j: j-1}], {i, j, valTop, valLeft, partialLCS}, 25);
           j--;
         }
@@ -154,8 +154,10 @@ export class LCSTabulation implements AlgorithmModule {
     }
     
     // Mark base case cell explicitly if reached
-    table[i][j].state = 'path';
-    addStep('result', {i, j}, [], {n, m, result: table[n][m].value, partialLCS}, 28);
+    if (table[i]?.[j]) {
+      table[i]![j]!.state = 'path';
+    }
+    addStep('result', {i, j}, [], {n, m, result: table[n]?.[m]?.value, partialLCS}, 28);
 
     return steps;
   }
